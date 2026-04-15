@@ -1,0 +1,31 @@
+[project]
+name = "cookiful-db"
+version = "0.1.0"
+description = "Cookiful database models, migrations, and import scripts"
+requires-python = ">=3.11"
+dependencies = [
+  "sqlalchemy>=2.0.36",
+  "psycopg[binary]>=3.2.3",
+  "pydantic-settings>=2.6.0",
+  "python-dotenv>=1.0.1"
+]
+
+[project.scripts]
+cookiful-db-apply-migration = "cookiful_db.scripts.apply_migration:main"
+cookiful-db-seed = "cookiful_db.scripts.seed:main"
+cookiful-db-import-recipes = "cookiful_db.scripts.import_recipes_csv:main"
+cookiful-db-inspect-recipes = "cookiful_db.scripts.inspect_recipes:main"
+cookiful-db-inspect-recipe-detail = "cookiful_db.scripts.inspect_recipe_detail:main"
+cookiful-db-create-recipe-catalog-view = "cookiful_db.scripts.create_recipe_catalog_view:main"
+cookiful-db-bootstrap = "cookiful_db.scripts.bootstrap_local:main"
+cookiful-db-doctor = "cookiful_db.scripts.doctor:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

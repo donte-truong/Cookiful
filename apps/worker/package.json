@@ -1,0 +1,14 @@
+{
+  "name": "@cookiful/worker",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "echo \"Scaffold worker app here\"",
+    "build": "echo \"Build worker app\"",
+    "lint": "echo \"Lint worker app\"",
+    "test": "echo \"Test worker app\"",
+    "typecheck": "echo \"Typecheck worker app\"",
+    "format": "echo \"Format worker app\""
+  }
+}
+

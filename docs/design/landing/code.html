@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Amber Hearth | The Culinary Editorial</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#904800",
+                        "on-error": "#ffffff",
+                        "secondary": "#8c4f10",
+                        "secondary-container": "#fdad67",
+                        "surface-dim": "#e1d9cb",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#ffb694",
+                        "on-primary-fixed": "#351000",
+                        "primary": "#9d3f00",
+                        "primary-fixed-dim": "#ffb694",
+                        "tertiary-container": "#b55d00",
+                        "on-secondary-fixed-variant": "#6d3a00",
+                        "outline": "#8c7166",
+                        "secondary-fixed": "#ffdcc2",
+                        "surface": "#fff8ef",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "on-secondary-fixed": "#2e1500",
+                        "secondary-fixed-dim": "#ffb77b",
+                        "on-primary-fixed-variant": "#7b2f00",
+                        "primary-fixed": "#ffdbcc",
+                        "on-tertiary-container": "#fffbff",
+                        "tertiary-fixed": "#ffdcc5",
+                        "surface-container": "#f5edde",
+                        "surface-container-high": "#efe7d9",
+                        "on-surface": "#1e1b13",
+                        "surface-container-highest": "#e9e2d3",
+                        "surface-bright": "#fff8ef",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#fbf3e4",
+                        "on-primary-container": "#fffbff",
+                        "outline-variant": "#e0c0b2",
+                        "on-tertiary-fixed": "#301400",
+                        "surface-tint": "#a14000",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#be561a",
+                        "on-surface-variant": "#594238",
+                        "background": "#fff8ef",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#763f00",
+                        "inverse-on-surface": "#f8f0e1",
+                        "inverse-surface": "#343026",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "on-background": "#1e1b13",
+                        "surface-variant": "#e9e2d3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Noto Serif"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+        }
+        .hearth-shadow {
+            box-shadow: 0px 20px 40px rgba(30, 27, 19, 0.06);
+        }
+        .copper-gradient {
+            background: linear-gradient(135deg, #9d3f00 0%, #be561a 100%);
+        }
+        .editorial-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #fff8ef;
+            color: #1e1b13;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Noto Serif', serif;
+        }
+    </style>
+</head>
+<body class="bg-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopNavBar Shell -->
+<nav class="fixed top-0 w-full z-50 bg-[#fff8ef]/70 dark:bg-[#1e1b13]/70 backdrop-blur-xl shadow-[0px_20px_40px_rgba(30,27,19,0.06)]">
+<div class="flex justify-between items-center px-8 py-4 max-w-screen-2xl mx-auto">
+<div class="text-2xl font-bold italic text-[#9d3f00] dark:text-[#be561a] font-['Noto_Serif']">
+                Amber Hearth
+            </div>
+<div class="hidden md:flex items-center gap-10">
+<a class="font-['Noto_Serif'] text-lg tracking-tight text-[#9d3f00] border-b-2 border-[#9d3f00] pb-1" href="#">Recipes</a>
+<a class="font-['Noto_Serif'] text-lg tracking-tight text-[#594238] dark:text-[#efe7d9] hover:text-[#9d3f00] transition-colors duration-300" href="#">Techniques</a>
+<a class="font-['Noto_Serif'] text-lg tracking-tight text-[#594238] dark:text-[#efe7d9] hover:text-[#9d3f00] transition-colors duration-300" href="#">Editorial</a>
+<a class="font-['Noto_Serif'] text-lg tracking-tight text-[#594238] dark:text-[#efe7d9] hover:text-[#9d3f00] transition-colors duration-300" href="#">Boutique</a>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="px-6 py-2 rounded-full copper-gradient text-white font-medium scale-95 active:opacity-80 transition-transform">
+                    Sign In
+                </button>
+</div>
+</div>
+</nav>
+<main class="pt-24">
+<!-- Hero Section: Intentional Asymmetry -->
+<section class="relative px-8 lg:px-24 py-16 editorial-grid gap-8 items-center overflow-hidden">
+<div class="col-span-12 lg:col-span-6 z-10">
+<span class="text-secondary font-label uppercase tracking-widest text-sm mb-4 block">Est. 2024 — The Sensory Sommelier</span>
+<h1 class="text-6xl lg:text-8xl leading-tight font-bold text-on-surface mb-8">
+                    The Art of <br/>
+<span class="italic text-primary">Slow Cooking</span>
+</h1>
+<p class="text-xl text-on-surface-variant max-w-lg mb-12 font-body leading-relaxed">
+                    Rediscover the rhythm of the kitchen. Cookiful combines heritage culinary wisdom with copper-precision AI tools to elevate your daily ritual.
+                </p>
+<div class="flex gap-4">
+<button class="px-10 py-5 rounded-xl copper-gradient text-on-primary font-bold shadow-lg hover:brightness-110 transition-all">
+                        Explore the Collections
+                    </button>
+<button class="px-10 py-5 rounded-xl border border-outline-variant text-primary font-bold hover:bg-surface-container transition-all">
+                        Meet the Sous-Chef
+                    </button>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-6 relative h-[600px] mt-12 lg:mt-0">
+<div class="absolute inset-0 bg-surface-container-high rounded-[3rem] -rotate-3"></div>
+<img class="absolute inset-0 w-full h-full object-cover rounded-[3rem] shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-700" data-alt="Close-up of high-end copper cookware on a rustic wooden stove top with warm steam and soft morning light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZlWkdidqvT5c9xWsEE71d75CGGmmPjmCX6s-6dehCuk1Jgj34pBNyQj7tXPESqFdCx5BVpA8nhpYc8oRcHjkqx7EbCn5awJeQOFRtqklhpE_sPepjaKvyuCe1yEIDOVJvn0YkXLmMB9hEgAw8jp7DL_9emmvX7senS0KZFzvJhbMU6e0efOT54gPVNRL_mJNVg6X_NJfI3BdSFWwOmt1AHRBuk0y6855ZIMCiKaEJQCRVDSlEO7O0VSjAAnrrcJFjY76nhWipyLAJ"/>
+<div class="absolute -bottom-8 -left-8 bg-surface-container-lowest p-6 rounded-2xl hearth-shadow max-w-[240px]">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-primary" data-icon="local_fire_department" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="text-xs font-bold uppercase tracking-widest text-secondary">Hearth Tip</span>
+</div>
+<p class="text-sm font-body text-on-surface">"Always pre-heat your copper core for even browning."</p>
+</div>
+</div>
+</section>
+<!-- Social Collections: Bento Grid -->
+<section class="px-8 lg:px-24 py-24 bg-surface-container-low">
+<div class="max-w-screen-2xl mx-auto">
+<div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-4">
+<div class="max-w-xl">
+<h2 class="text-4xl font-bold mb-4">Curated Collections</h2>
+<p class="text-on-surface-variant">Follow world-class chefs and seasonal tastemakers as they share their digital cookbooks.</p>
+</div>
+<button class="group flex items-center gap-2 text-primary font-bold border-b-2 border-transparent hover:border-primary transition-all pb-1">
+                        View All Stories
+                        <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<!-- Bento Item 1 -->
+<div class="md:col-span-2 md:row-span-2 group relative overflow-hidden rounded-3xl bg-surface-container-lowest hearth-shadow">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Aerial view of a Mediterranean feast with colorful shared plates, olives, and artisan breads in golden sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXfJmfitlFf87ytn-XcqJgBckThp1RoNd8ev7BUZDVbbVvOlMFrBIaz1XBvrPQTIAbG1gG22RWW8X2wt2q7YoY0zwR1E2LxuJ3P9pIgPym2ZQnGCxaRJQnWZ2aj_Vh6dPxZi6Cw5BoVBgTgykHDqZeQ9yh_vlFJ5G-MKh42Ipj9QdB7Nm_ErLJUhhtfkBRlWUbaCUOt6UH9ljVto1fpWFPZTMr1yaB_LgHhVC_0dJp9N9oPiWkcunjpnVZQv4voCXmiyU7Y3X894Sc"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/80 via-transparent to-transparent"></div>
+<div class="absolute bottom-0 p-8">
+<span class="inline-block px-3 py-1 rounded-full bg-primary-container/20 backdrop-blur-md text-white text-xs font-bold uppercase mb-4 tracking-widest">Seasonal Focus</span>
+<h3 class="text-3xl text-white font-bold mb-2">Summer Harvest: Provence</h3>
+<p class="text-white/80 font-body">12 curated recipes for al fresco dining.</p>
+</div>
+</div>
+<!-- Bento Item 2 -->
+<div class="group relative overflow-hidden rounded-3xl bg-surface-container-lowest hearth-shadow aspect-square">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="Vibrant close-up of a fresh green salad with edible flowers and citrus vinaigrette in a handmade ceramic bowl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmid3Mbe0KeYiH2jEsyy3PjySykoTtALj2M5RbmxM__xL6MSbVbah9AY0uRQO3EIqxZ4k5169Ul8DtYuMbolh7aVCB3yq_ayPWcmp9W8PyT0pBiT5vKJtJ-qXNEgpezVM7wgym-l6Bpdt4mxrnRuIKNAxH61M9tEN6ichKFm-xjSXCM3z0BGwF-WBKyCQqZaWiIaAj3fzSKgdVEdDW4v09v2aXGpnMm3qFeeGED_pvqJgCAYXT2-APdNMvfS5uQii1T5o4oD6yJDzf"/>
+<div class="absolute inset-0 bg-on-surface/20 group-hover:bg-transparent transition-colors"></div>
+<div class="absolute bottom-4 left-4 right-4 p-4 bg-surface/90 backdrop-blur-md rounded-xl">
+<p class="text-sm font-bold text-primary">The Botanical Table</p>
+<p class="text-xs text-on-surface-variant">by Elena Rostova</p>
+</div>
+</div>
+<!-- Bento Item 3 -->
+<div class="group relative overflow-hidden rounded-3xl bg-surface-container-lowest hearth-shadow aspect-square">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="Professional chef plating a delicate dish with precision tweezers in a dark-themed high-end kitchen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3dMTZRVeOWyDXbF5j_AB5KEuW4zrFMLwyOtAVSDgrAmzBABKgmAOru7Ka4EfjuYwYxGkGRdBo-yrGXH05UOkxk10AZdYzwBSjtYQHdSzYgTzVr6b_IaBBZ-s1XEw_VrQ6EueqBwDf8Es1WzpKiwl2sla76pBD9ztDX0p9G3LICX39cIXRhBMqJs5ZprjReRkqev-U68gCfcaFutQrL8vQzSnsoss-BSZ7U4mUM-xuiJpb5r7ThYS8KSkHOCYOI3UUEDvHGA08z1Bg"/>
+<div class="absolute inset-0 bg-on-surface/20 group-hover:bg-transparent transition-colors"></div>
+<div class="absolute bottom-4 left-4 right-4 p-4 bg-surface/90 backdrop-blur-md rounded-xl">
+<p class="text-sm font-bold text-primary">Technique: Fire &amp; Embers</p>
+<p class="text-xs text-on-surface-variant">by Marcus Thorne</p>
+</div>
+</div>
+<!-- Bento Item 4 -->
+<div class="md:col-span-2 group relative overflow-hidden rounded-3xl bg-surface-container-lowest hearth-shadow h-[240px]">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Close up of chocolate dessert with hazelnut textures and gold leaf garnish on dark slate plate" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDj4KxaCOycBvG5Qh_5bq6iEK4BMI2Oh0jIKaL-XYUlSlEAXbH2ZmhSgT3II59UacSxcq2ccQlsq6rdRgacyL0MhKHvGEE6SQ_5yl36NnP6ocMv512ro2oIUatnBTu942Qw2POwDmFyA408adv4-W1XWWVwoPyytSnoNjA-0wKu_uz_o2p0Xfe3zF1n3SmZ1Wq9zaHh9lXQgJ4jE0JL2Ux6VoNnwxWKHydSGWuq87uiyhHY5DH1TuAqaa42KRuVRTMpb3lzizSP0yTF"/>
+<div class="absolute inset-0 bg-gradient-to-r from-primary/60 to-transparent"></div>
+<div class="absolute left-8 top-1/2 -translate-y-1/2">
+<h3 class="text-2xl text-white font-bold mb-1">Patisserie Mastery</h3>
+<p class="text-white/80 text-sm">Unlock the secrets of chocolate tempering.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- AI Sous-Chef Section: Glassmorphism & Copper Accents -->
+<section class="px-8 lg:px-24 py-24 relative">
+<div class="max-w-screen-2xl mx-auto flex flex-col lg:flex-row items-center gap-16">
+<div class="w-full lg:w-1/2">
+<div class="relative p-1 bg-gradient-to-br from-outline-variant/30 to-primary/10 rounded-[2.5rem]">
+<div class="bg-surface rounded-[2.4rem] p-8 lg:p-12 relative overflow-hidden">
+<!-- SVG Grain Overlay -->
+<div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCTYH9gDLe3flhn62QwNHKwNIarMlO77E61NLFRKUaP4ZAJ5FMBGypFBk0lmxkJtUrq4T67lNtUZqheTQFdpVagOnNH-91xtVtw5Z8OK01g_gDMV3eY63BJtw8e3neJHV7f1nyvLZxYNBTdoH9qiYJPGUSHnrPhQ6KV-X5QwP9xr2mRkvMHQNZbGQXCtGhzYOUkU1fD0G8yKTG1tIv7AfDfga1STi6yBVMr43aC1it-lkXahtNEAEev1lWFX15URmyCbPY3dOTOAlXb');"></div>
+<div class="flex items-center gap-4 mb-8">
+<div class="w-12 h-12 rounded-full copper-gradient flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="neurology">neurology</span>
+</div>
+<div>
+<h3 class="text-2xl font-bold">The AI Sous-Chef</h3>
+<p class="text-sm font-label text-secondary tracking-widest uppercase">Intelligent Kitchen Pairing</p>
+</div>
+</div>
+<div class="space-y-6">
+<div class="p-6 bg-surface-container rounded-2xl border-b-4 border-primary">
+<p class="italic text-on-surface-variant mb-4">"I have four duck breasts and some wild cherries. What's the best technique?"</p>
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-primary mt-1" data-icon="auto_awesome">auto_awesome</span>
+<p class="text-on-surface font-medium">Recommended: Honey-Glazed Searing with a reduction of Cherry Gastrique. Should I adjust your meal prep calendar for Tuesday?</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 bg-surface-container-low rounded-xl flex items-center gap-3">
+<span class="material-symbols-outlined text-outline" data-icon="timer">timer</span>
+<div>
+<p class="text-[10px] uppercase tracking-tighter text-on-surface-variant font-bold">Cook Time</p>
+<p class="text-sm font-bold">45 Mins</p>
+</div>
+</div>
+<div class="p-4 bg-surface-container-low rounded-xl flex items-center gap-3">
+<span class="material-symbols-outlined text-outline" data-icon="restaurant">restaurant</span>
+<div>
+<p class="text-[10px] uppercase tracking-tighter text-on-surface-variant font-bold">Complexity</p>
+<p class="text-sm font-bold">Intermediate</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="w-full lg:w-1/2">
+<h2 class="text-5xl font-bold mb-6 leading-tight">Your Kitchen, <br/><span class="italic text-primary">Digitally Orchestrated.</span></h2>
+<p class="text-lg text-on-surface-variant mb-8 font-body">Our AI doesn't just give you recipes; it understands the chemistry of flavor and the logistics of your life. It learns your palate, manages your pantry, and scales with your ambition.</p>
+<ul class="space-y-6 mb-10">
+<li class="flex items-center gap-4">
+<span class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-sm" data-icon="check" style="font-variation-settings: 'wght' 700;">check</span>
+</span>
+<span class="font-medium">Flavor profile mapping based on 200+ global cuisines.</span>
+</li>
+<li class="flex items-center gap-4">
+<span class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-sm" data-icon="check" style="font-variation-settings: 'wght' 700;">check</span>
+</span>
+<span class="font-medium">Automatic grocery ordering from boutique suppliers.</span>
+</li>
+<li class="flex items-center gap-4">
+<span class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-sm" data-icon="check" style="font-variation-settings: 'wght' 700;">check</span>
+</span>
+<span class="font-medium">Real-time technique coaching via voice interface.</span>
+</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- Meal Prep Calendar: Refined & Structured -->
+<section class="px-8 lg:px-24 py-24 bg-surface-container-highest/30">
+<div class="max-w-screen-2xl mx-auto">
+<div class="text-center mb-16">
+<h2 class="text-4xl font-bold mb-4">The Weekly Menu</h2>
+<p class="text-on-surface-variant max-w-2xl mx-auto">A seamless orchestration of nutrition and pleasure. Drag, drop, and let the Hearth handle the rest.</p>
+</div>
+<div class="bg-surface rounded-3xl hearth-shadow overflow-hidden">
+<div class="grid grid-cols-1 md:grid-cols-7 border-b border-outline-variant/10">
+<div class="p-6 text-center border-r border-outline-variant/10 bg-surface-container">
+<p class="text-xs font-bold text-secondary uppercase tracking-widest mb-1">Mon</p>
+<p class="text-xl font-headline italic">12</p>
+</div>
+<div class="p-6 text-center border-r border-outline-variant/10">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Tue</p>
+<p class="text-xl font-headline">13</p>
+</div>
+<div class="p-6 text-center border-r border-outline-variant/10">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Wed</p>
+<p class="text-xl font-headline">14</p>
+</div>
+<div class="p-6 text-center border-r border-outline-variant/10 bg-primary/5">
+<p class="text-xs font-bold text-primary uppercase tracking-widest mb-1">Thu</p>
+<p class="text-xl font-headline font-bold text-primary">15</p>
+</div>
+<div class="p-6 text-center border-r border-outline-variant/10">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Fri</p>
+<p class="text-xl font-headline">16</p>
+</div>
+<div class="p-6 text-center border-r border-outline-variant/10">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Sat</p>
+<p class="text-xl font-headline">17</p>
+</div>
+<div class="p-6 text-center">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Sun</p>
+<p class="text-xl font-headline">18</p>
+</div>
+</div>
+<div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="space-y-6">
+<h4 class="flex items-center gap-2 text-secondary font-bold text-sm tracking-widest uppercase">
+<span class="material-symbols-outlined text-lg" data-icon="sunny">sunny</span> Breakfast
+                            </h4>
+<div class="p-4 rounded-2xl bg-surface-container-low flex gap-4 items-center group cursor-pointer hover:bg-surface-container transition-colors">
+<div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Avocado toast with poached egg and microgreens on rustic bread" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqoRBGuALF7tJi8O4sb0AT1arUnzAC_f89bKt8q-Fi1gzI3CxMvExv4c669bzVXLcocOHmCVLZ-UOQc81ZrDF-Gcj1uSQCH5OI4nBz7WxOeWlBaI0q02I2qW4lND4LxVdWQNbYLEhEm-aZPMEHpfBf3DucZh7C3RFMNbczSkGKa12wWD_Y_2ekidPNExFrzyt0zL4UfpffDMqq8QwHggAXM77XesIwVJs49Kr9y6dcr3SEarVay1PbFMeQpe9g_B5gizSJUWB52xix"/>
+</div>
+<div>
+<p class="font-bold text-on-surface text-sm">Avocado &amp; Poached Heirloom</p>
+<p class="text-xs text-on-surface-variant">15 mins • 340 kcal</p>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<h4 class="flex items-center gap-2 text-secondary font-bold text-sm tracking-widest uppercase">
+<span class="material-symbols-outlined text-lg" data-icon="wb_twilight">wb_twilight</span> Lunch
+                            </h4>
+<div class="p-4 rounded-2xl bg-surface-container-low flex gap-4 items-center group cursor-pointer hover:bg-surface-container transition-colors">
+<div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Fresh seasonal buddha bowl with quinoa, roasted chickpeas, and tahini dressing" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCA683HJBHmdA9JFQeWhSr8A9nY7tKyI4xHdPnC44pqSS16TKd7mJIjOfHhTlQvdobgC0VXOBjLvMo3SddQCLFlMg_k1anAGahCUyMwMfLotxjtEnx-vXSv4w2pMueplZj3uevcBMSPuaATChlImD_23qd-0UDTVd9c9DU_oPsvyAjzWPouzXNFKBAWznQF8DBrSi0Z_G0Z_12wLs5pD9Biz5Q6gQtgjGuplquVMQrG6ERP1OhqJmkZVd110e0UnqFI0eOiZLLbxcDZ"/>
+</div>
+<div>
+<p class="font-bold text-on-surface text-sm">The Roasted Hearth Bowl</p>
+<p class="text-xs text-on-surface-variant">10 mins • 480 kcal</p>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<h4 class="flex items-center gap-2 text-primary font-bold text-sm tracking-widest uppercase">
+<span class="material-symbols-outlined text-lg" data-icon="dark_mode" style="font-variation-settings: 'FILL' 1;">dark_mode</span> Dinner
+                            </h4>
+<div class="p-6 rounded-2xl copper-gradient text-white flex flex-col gap-4 relative overflow-hidden shadow-xl">
+<span class="material-symbols-outlined absolute top-4 right-4 opacity-20 text-4xl" data-icon="restaurant_menu">restaurant_menu</span>
+<div>
+<p class="text-xs font-bold uppercase tracking-widest opacity-80 mb-1">Tonight's Special</p>
+<p class="text-xl font-bold">Duck Confit with Cherry Gastrique</p>
+</div>
+<div class="flex justify-between items-end">
+<p class="text-sm opacity-90">Prep at 6:30 PM</p>
+<button class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm transition-colors">Details</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Shell -->
+<footer class="w-full py-12 px-8 bg-[#efe7d9] dark:bg-[#1e1b13]">
+<div class="flex flex-col md:flex-row justify-between items-center gap-8 w-full border-t border-[#e0c0b2]/15 pt-12">
+<div class="text-xl font-serif text-[#1e1b13] dark:text-[#fff8ef]">
+                Amber Hearth
+            </div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="font-['Manrope'] text-sm uppercase tracking-widest text-[#594238] dark:text-[#8c7166] hover:text-[#9d3f00] underline-offset-4 hover:underline transition-opacity opacity-100 hover:opacity-80" href="#">The Manifesto</a>
+<a class="font-['Manrope'] text-sm uppercase tracking-widest text-[#594238] dark:text-[#8c7166] hover:text-[#9d3f00] underline-offset-4 hover:underline transition-opacity opacity-100 hover:opacity-80" href="#">Privacy</a>
+<a class="font-['Manrope'] text-sm uppercase tracking-widest text-[#594238] dark:text-[#8c7166] hover:text-[#9d3f00] underline-offset-4 hover:underline transition-opacity opacity-100 hover:opacity-80" href="#">Contact</a>
+<a class="font-['Manrope'] text-sm uppercase tracking-widest text-[#594238] dark:text-[#8c7166] hover:text-[#9d3f00] underline-offset-4 hover:underline transition-opacity opacity-100 hover:opacity-80" href="#">Press Kit</a>
+</div>
+<p class="font-['Manrope'] text-sm uppercase tracking-widest text-[#594238] dark:text-[#8c7166] text-center md:text-right">
+                © 2024 The Culinary Editorial. Crafted for the Sensory Sommelier.
+            </p>
+</div>
+</footer>
+<!-- FAB: Only if context allows, keeping it for global action -->
+<button class="fixed bottom-8 right-8 w-16 h-16 rounded-full copper-gradient text-white hearth-shadow flex items-center justify-center z-40 hover:scale-110 active:scale-95 transition-transform group">
+<span class="material-symbols-outlined text-3xl group-hover:rotate-12 transition-transform" data-icon="add_circle" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+</button>
+</body></html>

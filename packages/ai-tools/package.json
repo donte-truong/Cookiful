@@ -1,0 +1,16 @@
+{
+  "name": "@cookiful/ai-tools",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "echo \"Build AI tools package\"",
+    "lint": "echo \"Lint AI tools package\"",
+    "test": "echo \"Test AI tools package\"",
+    "typecheck": "echo \"Typecheck AI tools package\"",
+    "format": "echo \"Format AI tools package\""
+  }
+}
+

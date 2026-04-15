@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@cookiful/types/*": ["packages/types/src/*"],
+      "@cookiful/db/*": ["packages/db/src/*"],
+      "@cookiful/utils/*": ["packages/utils/src/*"],
+      "@cookiful/recipe-schema/*": ["packages/recipe-schema/src/*"],
+      "@cookiful/ai-tools/*": ["packages/ai-tools/src/*"],
+      "@cookiful/config/*": ["packages/config/src/*"],
+      "@cookiful/ui/*": ["packages/ui/src/*"]
+    }
+  }
+}
+

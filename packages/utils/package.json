@@ -1,0 +1,16 @@
+{
+  "name": "@cookiful/utils",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "echo \"Build utils package\"",
+    "lint": "echo \"Lint utils package\"",
+    "test": "echo \"Test utils package\"",
+    "typecheck": "echo \"Typecheck utils package\"",
+    "format": "echo \"Format utils package\""
+  }
+}
+

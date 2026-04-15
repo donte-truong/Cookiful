@@ -1,0 +1,14 @@
+{
+  "name": "@cookiful/mobile",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "echo \"Scaffold Expo app here\"",
+    "build": "echo \"Build mobile app\"",
+    "lint": "echo \"Lint mobile app\"",
+    "test": "echo \"Test mobile app\"",
+    "typecheck": "echo \"Typecheck mobile app\"",
+    "format": "echo \"Format mobile app\""
+  }
+}
+

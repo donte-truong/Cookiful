@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sign In - Cookiful</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-dim": "#e1d9cb",
+                      "error-container": "#ffdad6",
+                      "tertiary-container": "#b55d00",
+                      "on-background": "#1e1b13",
+                      "inverse-on-surface": "#f8f0e1",
+                      "on-primary-fixed": "#351000",
+                      "on-secondary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "background": "#fff8ef",
+                      "outline-variant": "#e0c0b2",
+                      "secondary-fixed": "#ffdcc2",
+                      "on-secondary-fixed": "#2e1500",
+                      "primary-fixed": "#ffdbcc",
+                      "on-tertiary-fixed": "#301400",
+                      "secondary-fixed-dim": "#ffb77b",
+                      "surface": "#fff8ef",
+                      "outline": "#8c7166",
+                      "secondary": "#8c4f10",
+                      "on-primary-container": "#fffbff",
+                      "error": "#ba1a1a",
+                      "on-surface": "#1e1b13",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "on-tertiary-container": "#fffbff",
+                      "on-secondary-container": "#763f00",
+                      "on-primary-fixed-variant": "#7b2f00",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-bright": "#fff8ef",
+                      "on-error": "#ffffff",
+                      "inverse-primary": "#ffb694",
+                      "on-primary": "#ffffff",
+                      "surface-tint": "#a14000",
+                      "surface-variant": "#e9e2d3",
+                      "surface-container": "#f5edde",
+                      "surface-container-high": "#efe7d9",
+                      "primary": "#9d3f00",
+                      "tertiary": "#904800",
+                      "on-tertiary": "#ffffff",
+                      "primary-container": "#be561a",
+                      "inverse-surface": "#343026",
+                      "surface-container-highest": "#e9e2d3",
+                      "on-surface-variant": "#594238",
+                      "tertiary-fixed": "#ffdcc5",
+                      "primary-fixed-dim": "#ffb694",
+                      "secondary-container": "#fdad67",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "surface-container-low": "#fbf3e4",
+                      "on-secondary-fixed-variant": "#6d3a00"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "1.5rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Noto Serif", "serif"],
+                      "body": ["Manrope", "sans-serif"],
+                      "label": ["Manrope", "sans-serif"]
+              }
+            },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Manrope', sans-serif; }
+        h1, h2, .serif-label { font-family: 'Noto Serif', serif; }
+        .glass-panel {
+            background: rgba(255, 248, 239, 0.7);
+            backdrop-filter: blur(24px);
+        }
+        .hearth-shadow {
+            box-shadow: 0px 20px 40px rgba(30, 27, 19, 0.06);
+        }
+        .copper-gradient {
+            background: linear-gradient(135deg, #9d3f00 0%, #be561a 100%);
+        }
+        input:focus {
+            outline: none;
+            border-bottom-color: #9d3f00 !important;
+        }
+      </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
+<!-- Decorative Top Wave -->
+<div class="absolute top-0 left-0 w-full overflow-hidden leading-none z-0">
+<svg class="relative block w-full h-32 text-surface-container-high" data-name="Layer 1" preserveaspectratio="none" viewbox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg">
+<path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="currentColor"></path>
+</svg>
+</div>
+<!-- Background texture simulation -->
+<div class="absolute inset-0 opacity-10 pointer-events-none z-0">
+<img class="w-full h-full object-cover grayscale contrast-125" data-alt="Close-up texture of high-end textured cream paper with subtle fiber patterns and organic grain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAyTqZdiAKTAWjwrc9b7_81jLHK8yhHU_z3r11dZANO7n7Z9i9cOesGS3IqwAy-PHSjRxtRqvj27QgoGPSF962g85_3_c_HJ4UPeEMK8Z4VzxaKQCOhOrejQrSMbHI1CmbsDhDbyV7uivPnvRu3gsKH__knbMybBJSDFB-cobUUqC7X-_6qk0pvurlfzWg-XrkoNgJsSH1TEqkzxgEM94bB3xSecKLOjrW3KFEoi6OpJePyS8o5f3gSQSkx5eihwK6nwR-b0LaxjDu"/>
+</div>
+<main class="w-full max-w-md z-10">
+<!-- Brand Identity -->
+<div class="text-center mb-10">
+<div class="flex items-center justify-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary text-4xl" data-icon="cooking">cooking</span>
+<h1 class="text-3xl font-bold tracking-tight text-on-surface">Cookiful</h1>
+</div>
+<p class="text-on-surface-variant italic font-serif">Welcome back to the hearth.</p>
+</div>
+<!-- Login Card -->
+<div class="glass-panel hearth-shadow rounded-xl p-10 flex flex-col gap-8 border-t border-l border-white/40">
+<form class="flex flex-col gap-6">
+<!-- Email Field -->
+<div class="flex flex-col gap-2">
+<label class="serif-label text-sm font-bold text-on-surface-variant" for="email">Email Address</label>
+<input class="bg-surface-container border-0 border-b-2 border-outline/30 px-0 py-3 text-on-surface placeholder:text-outline focus:ring-0 transition-all" id="email" placeholder="chef@culinary.com" type="email"/>
+</div>
+<!-- Password Field -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<label class="serif-label text-sm font-bold text-on-surface-variant" for="password">Password</label>
+<a class="text-xs font-label text-secondary hover:underline transition-all" href="#">Forgot Password?</a>
+</div>
+<input class="bg-surface-container border-0 border-b-2 border-outline/30 px-0 py-3 text-on-surface placeholder:text-outline focus:ring-0 transition-all" id="password" placeholder="••••••••" type="password"/>
+</div>
+<!-- Primary CTA -->
+<button class="copper-gradient text-on-primary font-body font-bold py-4 rounded-xl text-lg tracking-wide hover:scale-[1.02] active:scale-[0.98] transition-transform hearth-shadow" type="submit">
+                    Sign In
+                </button>
+</form>
+<!-- Separator -->
+<div class="flex items-center gap-4 py-2">
+<div class="h-[1px] flex-1 bg-outline/20"></div>
+<span class="text-xs text-outline font-label uppercase tracking-widest">or continue with</span>
+<div class="h-[1px] flex-1 bg-outline/20"></div>
+</div>
+<!-- Social Logins -->
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-2 bg-surface-container-highest hover:bg-surface-dim transition-colors py-3 px-4 rounded-xl border-b border-outline/10">
+<img alt="Google" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhLAGH8xiQ9GHhp_8v1o5sMeQwvm_QiSX5f73xyufIMzJou00h7am2_lmJYyr7sMRiSnJhbxxaakSa-oqZ9YlQpN8ndLnLZ50xb6SdKCY14gOdsb-pPACkZYahOPtwU73pKuQfr-3e2kq-SWpytK6cuB5RclV093kREhVLUKdpOyVKebl4jLnhC0lN1GJyRRwmn89OJl3cewKedHzOS2_psfPj_JtNwre9uiNIn1NKXwtwUdgvYFsEBf_hrC3beHKTfdSmfHxrWU8Q"/>
+<span class="text-sm font-medium text-on-surface-variant font-label">Google</span>
+</button>
+<button class="flex items-center justify-center gap-2 bg-surface-container-highest hover:bg-surface-dim transition-colors py-3 px-4 rounded-xl border-b border-outline/10">
+<span class="material-symbols-outlined text-on-surface text-xl" data-icon="apple" data-weight="fill">ios</span>
+<span class="text-sm font-medium text-on-surface-variant font-label">Apple</span>
+</button>
+</div>
+</div>
+<!-- Footer Link -->
+<p class="text-center mt-8 text-on-surface-variant text-sm">
+            Don't have an account? 
+            <a class="text-primary font-bold hover:underline transition-all underline-offset-4 decoration-primary-container" href="#">Sign Up</a>
+</p>
+</main>
+<!-- Decorative Bottom Wave -->
+<div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none z-0 transform rotate-180">
+<svg class="relative block w-full h-32 text-surface-container-high" data-name="Layer 1" preserveaspectratio="none" viewbox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg">
+<path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="currentColor"></path>
+</svg>
+</div>
+<!-- Hidden Footer satisfying Shared Component requirement but suppressed visually for login flow as per instructions -->
+<footer class="hidden">
+<span>© 2024 The Culinary Editorial. All rights reserved.</span>
+</footer>
+</body></html>

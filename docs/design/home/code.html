@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#6d3a00",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#b55d00",
+                        "surface-variant": "#e9e2d3",
+                        "inverse-on-surface": "#f8f0e1",
+                        "on-background": "#1e1b13",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#ffdbcc",
+                        "surface-tint": "#a14000",
+                        "surface-bright": "#fff8ef",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#ffb77b",
+                        "on-primary-container": "#fffbff",
+                        "surface-container-highest": "#e9e2d3",
+                        "primary-container": "#be561a",
+                        "surface": "#fff8ef",
+                        "tertiary-fixed": "#ffdcc5",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "on-surface": "#1e1b13",
+                        "secondary": "#8c4f10",
+                        "on-primary-fixed-variant": "#7b2f00",
+                        "outline-variant": "#e0c0b2",
+                        "surface-dim": "#e1d9cb",
+                        "on-tertiary-fixed": "#301400",
+                        "inverse-primary": "#ffb694",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#343026",
+                        "on-secondary-fixed": "#2e1500",
+                        "primary-fixed-dim": "#ffb694",
+                        "surface-container": "#f5edde",
+                        "background": "#fff8ef",
+                        "outline": "#8c7166",
+                        "on-secondary-container": "#763f00",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#fbf3e4",
+                        "on-surface-variant": "#594238",
+                        "on-tertiary-container": "#fffbff",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#904800",
+                        "on-primary-fixed": "#351000",
+                        "surface-container-high": "#efe7d9",
+                        "secondary-fixed": "#ffdcc2",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "primary": "#9d3f00",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#fdad67",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Noto Serif"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hearth-shadow {
+            box-shadow: 0px 20px 40px rgba(30, 27, 19, 0.06);
+        }
+        .glass-panel {
+            background: rgba(255, 248, 239, 0.7);
+            backdrop-filter: blur(24px);
+        }
+        .copper-gradient {
+            background: linear-gradient(135deg, #9d3f00 0%, #be561a 100%);
+        }
+        body {
+            background-color: #fff8ef;
+            color: #1e1b13;
+            font-family: 'Manrope', sans-serif;
+        }
+        h1, h2, h3, .serif-font {
+            font-family: 'Noto Serif', serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-[#fff8ef] dark:bg-stone-950 sticky top-0 z-50 transition-opacity duration-300">
+<nav class="flex justify-between items-center w-full px-8 py-6 max-w-7xl mx-auto">
+<div class="flex items-center gap-8">
+<div class="text-2xl font-serif font-bold text-[#1e1b13] dark:text-[#efe7d9] flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">cooking</span>
+<span>Cookiful</span>
+</div>
+<div class="hidden md:flex gap-6 font-['Noto_Serif'] font-medium text-base tracking-tight">
+<a class="text-[#9d3f00] dark:text-[#be561a] border-b-2 border-[#9d3f00] pb-1" href="#">Kitchen Lab</a>
+<a class="text-[#594238] dark:text-stone-400 hover:text-[#9d3f00] transition-opacity duration-300" href="#">The Hearth</a>
+<a class="text-[#594238] dark:text-stone-400 hover:text-[#9d3f00] transition-opacity duration-300" href="#">Journal</a>
+<a class="text-[#594238] dark:text-stone-400 hover:text-[#9d3f00] transition-opacity duration-300" href="#">Boutique</a>
+</div>
+</div>
+<div class="flex items-center gap-4 text-[#9d3f00] dark:text-[#be561a]">
+<button class="hover:opacity-80 transition-opacity duration-300 scale-95 active:scale-100 transition-transform">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+<button class="hover:opacity-80 transition-opacity duration-300 scale-95 active:scale-100 transition-transform">
+<span class="material-symbols-outlined">person</span>
+</button>
+</div>
+</nav>
+</header>
+<main class="max-w-7xl mx-auto px-6 pb-24">
+<!-- Section 1: The Intent Engine (Hero) -->
+<section class="py-20 md:py-32 flex flex-col items-center text-center">
+<h1 class="text-4xl md:text-6xl text-on-surface mb-12 max-w-3xl leading-tight">What would you like to cook today?</h1>
+<div class="w-full max-w-2xl relative group">
+<input class="w-full bg-surface-container border-none border-b-2 border-outline focus:ring-0 text-xl py-6 px-4 rounded-t-xl transition-all duration-300 placeholder:text-on-surface-variant/50" placeholder="Search ingredients, moods, or techniques..." type="text"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 text-primary">
+<span class="material-symbols-outlined text-3xl">restaurant_menu</span>
+</div>
+</div>
+<div class="flex flex-wrap justify-center gap-4 mt-8">
+<button class="bg-surface-container-lowest hearth-shadow px-6 py-2.5 rounded-full text-sm font-medium text-secondary hover:text-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">inventory_2</span> Use what I have
+                </button>
+<button class="bg-surface-container-lowest hearth-shadow px-6 py-2.5 rounded-full text-sm font-medium text-secondary hover:text-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">calendar_month</span> Meal prep for week
+                </button>
+<button class="bg-surface-container-lowest hearth-shadow px-6 py-2.5 rounded-full text-sm font-medium text-secondary hover:text-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">timer</span> Quick dinner
+                </button>
+</div>
+</section>
+<!-- Section 2: Intent Output (Dynamic Feed) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-24">
+<!-- Curated Selection (Bento Style) -->
+<div class="lg:col-span-8">
+<div class="max-h-[800px] overflow-y-auto pr-4 [&amp;::-webkit-scrollbar]:w-1.5 [&amp;::-webkit-scrollbar-track]:bg-surface-container [&amp;::-webkit-scrollbar-thumb]:bg-primary/30 [&amp;::-webkit-scrollbar-thumb]:rounded-full hover:[&amp;::-webkit-scrollbar-thumb]:bg-primary/50">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
+<div class="md:col-span-2 mb-4">
+<h2 class="text-3xl text-on-surface">Curated for your palate</h2>
+<p class="text-on-surface-variant font-label text-sm uppercase tracking-widest mt-2">Based on your recent French technique study</p>
+</div>
+<!-- Recipes will be here via previous append and internal logic of replacement -->
+<!-- Content is essentially the children of the original selector plus the new ones -->
+<div class="group bg-surface-container-lowest rounded-3xl overflow-hidden hearth-shadow transition-transform hover:-translate-y-1">
+<div class="relative h-64">
+<img class="w-full h-full object-cover" data-alt="close-up of vibrant seared scallops with herb butter and microgreens on a white ceramic plate" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXE3RZO9mzmHpoxztGrqQ2Q9nbfwxhT8ewb8OukKbXyl1albLn_I9gd0hPzLChCH-bSXzavOxgsNNvkxyPjsmIW99qoTxg_tHvLaklR7UxB7BdxlSRSevl8xWDHvWbkUqTAam0A8eC2cm5FlmblDtJhWvLyqL2Vcs8D_LSF4xgP1OQzUP5hO6fCXEp1zu3xYU6HQFeUwduLBbjhmgF-85i6UhxbsHvAXhyEo9teGoYBoDN6xxBhaQTdVwgQjzchh9hqQaZsz7qgV0e"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-surface/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter text-primary">20 MIN</span>
+<span class="bg-surface/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter text-secondary">KETO</span>
+</div>
+</div>
+<div class="p-6">
+<h3 class="text-xl mb-2 group-hover:text-primary transition-colors">Pan-Seared Diver Scallops</h3>
+<p class="text-on-surface-variant text-sm line-clamp-2">Master the art of the golden crust with this simple yet sophisticated butter-basting technique.</p>
+</div>
+</div>
+<div class="group bg-surface-container-lowest rounded-3xl overflow-hidden hearth-shadow transition-transform hover:-translate-y-1">
+<div class="relative h-64">
+<img class="w-full h-full object-cover" data-alt="artisanal fresh pasta with bright pesto and toasted pine nuts in a rustic terracotta bowl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATXp7pMQOmKT6f8PJymrTjDzInho5GLxdgGWo8m9EkUujqpoXcrOlSdTgUv-wTplxuZpwlk5YrThqGbNl-G_9v7yXtFiNZ8GL0DKut2kfW3kHOMwHiBG7QLjlh72y6DAl5ixRQa-K5opYO4nc7z5qPUbn__a5kgrxu7OiHklMCA86lhj3J55gI5KHRxID1Zo31pU1gWb-WUpkuZd6VdDq7uYH7ZwUUmYgz9pd0IOUpGz5uDOYlHV_qJKOwyb6m143I0htWyvozsTDV"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-surface/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter text-primary">45 MIN</span>
+<span class="bg-surface/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter text-secondary">VEGAN</span>
+</div>
+</div>
+<div class="p-6">
+<h3 class="text-xl mb-2 group-hover:text-primary transition-colors">Wild Ramp &amp; Basil Pesto</h3>
+<p class="text-on-surface-variant text-sm line-clamp-2">Hand-crushed seasonal ramps paired with cold-pressed olive oil over artisan trofie pasta.</p>
+</div>
+</div>
+<div class="group bg-surface-container-lowest rounded-3xl overflow-hidden hearth-shadow transition-transform hover:-translate-y-1">
+<div class="relative h-64">
+<img class="w-full h-full object-cover" data-alt="perfectly seared salmon fillet with crispy skin on a bed of greens" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl3mtLeRb4X8Zt7R8RCS8VQWk9wpgge6gsRrDRnpMhosG_V_qNkjbRSpJ8BGcuOFgkYDBmQXts0kH8DAY9vxiuBGbQ_im7IgYwqTgpvVC2do1sRXwN-M70bg9N5RnoJqXRcNgIVp5-JViL3Jj0nfM_lFJ-m5ygtXYBhCUDrQX6xlqNFDQa9nR-h77RFiCRkXU1pvdHFaZZ_mw93vNEAbb6WUdHMiFDJA-4xjjRtqU2z37nv0J2zWXJc65nmsvUnvdJ5ecBMJrZ9Y-d"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-surface/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter text-primary">15 MIN</span>
+<span class="bg-surface/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter text-secondary">OMEGA-3</span>
+</div>
+</div>
+<div class="p-6">
+<h3 class="text-xl mb-2 group-hover:text-primary transition-colors">Crispy Skin Pan-Seared Salmon</h3>
+<p class="text-on-surface-variant text-sm line-clamp-2">Achieve restaurant-quality crispy skin with our precision heat management guide.</p>
+</div>
+</div>
+<div class="group bg-surface-container-lowest rounded-3xl overflow-hidden hearth-shadow transition-transform hover:-translate-y-1">
+<div class="relative h-64">
+<img class="w-full h-full object-cover" data-alt="creamy mushroom risotto garnished with fresh parsley and shaved parmesan" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwpiY9n4PjuzTWHvkxeXfGrfv-JkYjukOOcl7UI8jiC_gNlZqszgVzOcQhX_92xmsToB9uPpTecF-WvouSRRoFimnQy8_iWpHsn5cpoR244EMjUR73ueJ_zAuQYK-vviFJ5bGzx9pQDH8XHGP4470Rb5vfAmkvDBLnZSPsqGQ6ZBbiQ34C5rvSw2SbszCiQOVri_Sc4s3i3EgIs80CMvEHOMXFFagTL2WAl_6fWpueRE4wXkEynFqA-vSfwPNXlydixYCAE1SLG1Np"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-surface/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter text-primary">35 MIN</span>
+<span class="bg-surface/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter text-secondary">VEGETARIAN</span>
+</div>
+</div>
+<div class="p-6">
+<h3 class="text-xl mb-2 group-hover:text-primary transition-colors">Wild Mushroom &amp; Thyme Risotto</h3>
+<p class="text-on-surface-variant text-sm line-clamp-2">A slow-stirred classic utilizing earthy forest mushrooms and aged Arborio rice.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-8 flex justify-center">
+<button class="flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all group">
+<span>Load more inspiration</span>
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Direct Plan Card (Editorial Content) -->
+<div class="lg:col-span-4 sticky top-32">
+<div class="copper-gradient p-1 rounded-3xl overflow-hidden shadow-2xl">
+<div class="bg-surface-container-lowest rounded-[1.4rem] p-8 h-full">
+<span class="text-primary font-bold text-xs uppercase tracking-widest block mb-4">Editorial Recommendation</span>
+<h2 class="text-2xl mb-6">Pantry-Inspired: Three Days in Provence</h2>
+<div class="space-y-6">
+<div class="flex gap-4 items-start">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined">wb_sunny</span>
+</div>
+<div>
+<h4 class="font-bold text-sm">The Tuesday Braise</h4>
+<p class="text-xs text-on-surface-variant">Red Wine Slow-Roasted Chicken using your Cabernet remnants.</p>
+</div>
+</div>
+<div class="flex gap-4 items-start">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined">nights_stay</span>
+</div>
+<div>
+<h4 class="font-bold text-sm">Wednesday Bistro Night</h4>
+<p class="text-xs text-on-surface-variant">Confit Duck Legs with the rosemary from your garden.</p>
+</div>
+</div>
+<div class="flex gap-4 items-start">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined">bakery_dining</span>
+</div>
+<div>
+<h4 class="font-bold text-sm">The Thursday Crust</h4>
+<p class="text-xs text-on-surface-variant">Sourdough Focaccia using the starter we fed yesterday.</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-10 copper-gradient text-on-primary py-4 rounded-xl font-bold tracking-tight hover:opacity-90 transition-opacity">
+                            View Shopping List
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: The Culinary Social (Social Hearth) -->
+<section class="bg-surface-container-high rounded-3xl p-8 md:p-16 overflow-hidden relative">
+<div class="absolute -right-20 -top-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+<div class="flex flex-col md:flex-row justify-between items-end mb-12 relative z-10">
+<div class="max-w-xl">
+<h2 class="text-4xl text-on-surface">The Social Hearth</h2>
+<p class="text-on-surface-variant mt-4 text-lg">See what your culinary circle is perfecting. Personalized for your shared interest in fermented flavors.</p>
+</div>
+<button class="text-primary font-bold border-b-2 border-primary/20 hover:border-primary pb-1 transition-all mt-6 md:mt-0">View All Collections</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+<!-- Social Card 1 -->
+<div class="group bg-surface/50 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-surface transition-all">
+<div class="flex items-center gap-3 mb-6">
+<img class="w-10 h-10 rounded-full object-cover grayscale" data-alt="portrait of a male chef in a clean white kitchen setting, smiling at the camera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD04hyVVIhMjOTSBL1_SxO7pbtE1DWNfTYkaThM85VAlUhU4xgBledrfY8hV12AZCHLGGcRTpSqZRYTWrFm-yPVIoABaEqdiBT_eMhrybUMjs1WmHn8M_qHBu0wBPb7M57Nq2ilTlBIYpgaNHBUh9h_PhMjRNR6QHfX8waQ2N7IoO2DcClXrL_SxcpGTN4Bu5sGis98cEnqEn_ApVmzaNpvuKavx_owgxg5JpYrOHNBerakptJGhe2Go0XBbRyrD6s1a4qzKZgPMSeg"/>
+<div>
+<p class="text-sm font-bold">Julian Vane</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Fermentation Specialist</p>
+</div>
+</div>
+<img class="w-full h-40 object-cover rounded-xl mb-4" data-alt="close up of glass jars filled with colorful fermented vegetables like radishes and carrots" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6BFbnUJoKjuX0pGPhJWnd-AQsKYn4ydF4SoUmcrS9pQKRPMCRJrMKDpeEUr_hapJeQR8v-T_PmOa1SQp8IvYXO6gAARjBsDLU_5ToLxRebWNjCG4LOPLpCwovSuWO4l5xWiz3MENt7hsRnaXjZyK58033Rh8WjtTF8vFPSGFqlYbmWgmDS-TjeWWjiXfXqw-vdDdVNQYML5elmSjRiYaXprIyexdOM1QeKdQ9vRlIDV_jSyHEv-i8s4k_i-9P0pV1flGBL8npSvOi"/>
+<h3 class="text-lg mb-2">Winter Kimchi Trials</h3>
+<p class="text-sm text-on-surface-variant mb-4 italic">"The cold-press technique really preserves the snap of the daikon..."</p>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-xs text-on-surface-variant">42 others added to Kitchen Lab</span>
+</div>
+</div>
+<!-- Social Card 2 -->
+<div class="group bg-surface/50 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-surface transition-all">
+<div class="flex items-center gap-3 mb-6">
+<img class="w-10 h-10 rounded-full object-cover grayscale" data-alt="profile photo of a woman laughing in a warm lit dining room" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl9vXzKV7_cvfcKKa2uisC0eg47MOpPPLEHSnYRLTUt4On9QrTCm_9hWC64APK1tFegaURRmKjpfpclRsdTzCEOdOv369Qiga439u3f-sUP5H6onE_upiWEDexo683YhZE3A6-5rmFw7SznrRHLkT-qUePcX4sZE5epImAmm4kt3YfsE5s5P_gS5CaeFL10W9DOhKuaFkKn0V9tzKRrUCC0MjsEurnwO52ZjKj9CLqBxYq-tqo4a8imMYpe3mE27307n6zV1rVi6r6"/>
+<div>
+<p class="text-sm font-bold">Elena Rossi</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Pasta Artisan</p>
+</div>
+</div>
+<img class="w-full h-40 object-cover rounded-xl mb-4" data-alt="wooden board covered in flour with hand-formed orecchiette pasta" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6UA4YH4B8F5OvFXKJwxSoeGTwvsi2n6On4fByHT4mAxNUC_FHSE3afGUnT0fHr5FTpLnEHAxBTe6SBfhECp328Ld-0uq612xjV2QcINP6rx9psBuODnmrEXuc6f5nD0U2_aaafXA0EjshAaFmIWIDKkUqs8qCQ0KrN3m9q3zCMw1T0OMvOXkSILQdHimr9hPbLpZwsdUPW_zX1WMGLRg-7jTYKV5J4noN78GJcv0x4Lfb_PQ1EzAVz1HKr0pRe09jqMeN1FIYa0xD"/>
+<h3 class="text-lg mb-2">Semolina Secrets</h3>
+<p class="text-sm text-on-surface-variant mb-4 italic">"Finally nailed the hydration ratio for these Orecchiette!"</p>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-xs text-on-surface-variant">128 others bookmarked</span>
+</div>
+</div>
+<!-- Social Card 3 -->
+<div class="group bg-surface/50 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-surface transition-all">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white font-serif text-lg">C</div>
+<div>
+<p class="text-sm font-bold">Cookiful Curator</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Taste AI</p>
+</div>
+</div>
+<img class="w-full h-40 object-cover rounded-xl mb-4" data-alt="selection of expensive dark chocolates and cocoa beans on a dark slate" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCV6FGglJOdFp2ZdH1_etvJrOboG_yD0wfGrg4wEZA_nYY6u8Po_CpOvEXqBSol_uNNVWFCIFCF58Q503EuHzmDLWTb_ZLqroqKoXk0tuF_eSfyXnqHUBUdZdVMnGFPNKVzK3C-zJ369EcoG2mm3soMuVJh8eyscNz9oCSrRuHprlftnA-YHe6FsDL9uxIP70t5SFXvy4KprINKhhQgI9YhMVuaalMWmJynJbCnvKZ16UhOv_jfQuoG_N0L4Jz5fEAVXOQFV2U1kO21"/>
+<h3 class="text-lg mb-2">Single-Origin Cacao Pairings</h3>
+<p class="text-sm text-on-surface-variant mb-4 italic">"Explore how smoked sea salt elevates Tanzanian 70% bars."</p>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-xs text-on-surface-variant">Perfect match for your flavor profile</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-[#efe7d9] dark:bg-stone-900 w-full py-16 px-12 grid grid-cols-1 md:grid-cols-3 gap-12 max-w-7xl mx-auto rounded-t-3xl">
+<div class="space-y-4">
+<div class="text-xl font-serif text-[#1e1b13] dark:text-[#efe7d9] flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">cooking</span>
+<span>Cookiful</span>
+</div>
+<p class="text-[#594238] dark:text-stone-500 font-['Manrope'] text-sm leading-relaxed">
+                Empowering the home chef with professional insight and sensory inspiration. Your journey to mastery begins at the hearth.
+            </p>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div class="space-y-4">
+<h4 class="font-['Manrope'] text-sm uppercase tracking-widest text-[#9d3f00] dark:text-[#be561a] font-bold">Explore</h4>
+<nav class="flex flex-col gap-2 font-['Manrope'] text-sm uppercase tracking-widest">
+<a class="text-[#594238] dark:text-stone-500 hover:text-[#9d3f00] transition-colors duration-200 underline-offset-4 hover:underline" href="#">Provenance</a>
+<a class="text-[#594238] dark:text-stone-500 hover:text-[#9d3f00] transition-colors duration-200 underline-offset-4 hover:underline" href="#">Manifesto</a>
+</nav>
+</div>
+<div class="space-y-4">
+<h4 class="font-['Manrope'] text-sm uppercase tracking-widest text-[#9d3f00] dark:text-[#be561a] font-bold">Legal</h4>
+<nav class="flex flex-col gap-2 font-['Manrope'] text-sm uppercase tracking-widest">
+<a class="text-[#594238] dark:text-stone-500 hover:text-[#9d3f00] transition-colors duration-200 underline-offset-4 hover:underline" href="#">Privacy</a>
+<a class="text-[#594238] dark:text-stone-500 hover:text-[#9d3f00] transition-colors duration-200 underline-offset-4 hover:underline" href="#">Terms</a>
+</nav>
+</div>
+</div>
+<div class="flex flex-col justify-between items-end">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-[#594238] hover:text-primary transition-colors cursor-pointer">language</span>
+<span class="material-symbols-outlined text-[#594238] hover:text-primary transition-colors cursor-pointer">rss_feed</span>
+</div>
+<p class="text-[#594238] dark:text-stone-500 font-['Manrope'] text-sm uppercase tracking-widest mt-8 md:mt-0">
+                © 2024 Cookiful. All rights reserved.
+            </p>
+</div>
+</footer>
+</body></html>

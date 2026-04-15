@@ -1,0 +1,16 @@
+{
+  "name": "@cookiful/recipe-schema",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "echo \"Build recipe schema package\"",
+    "lint": "echo \"Lint recipe schema package\"",
+    "test": "echo \"Test recipe schema package\"",
+    "typecheck": "echo \"Typecheck recipe schema package\"",
+    "format": "echo \"Format recipe schema package\""
+  }
+}
+

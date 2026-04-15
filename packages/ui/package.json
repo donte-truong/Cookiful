@@ -1,0 +1,16 @@
+{
+  "name": "@cookiful/ui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "echo \"Build UI package\"",
+    "lint": "echo \"Lint UI package\"",
+    "test": "echo \"Test UI package\"",
+    "typecheck": "echo \"Typecheck UI package\"",
+    "format": "echo \"Format UI package\""
+  }
+}
+

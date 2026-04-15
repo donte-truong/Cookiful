@@ -1,0 +1,9 @@
+[console_scripts]
+cookiful-db-apply-migration = cookiful_db.scripts.apply_migration:main
+cookiful-db-bootstrap = cookiful_db.scripts.bootstrap_local:main
+cookiful-db-create-recipe-catalog-view = cookiful_db.scripts.create_recipe_catalog_view:main
+cookiful-db-doctor = cookiful_db.scripts.doctor:main
+cookiful-db-import-recipes = cookiful_db.scripts.import_recipes_csv:main
+cookiful-db-inspect-recipe-detail = cookiful_db.scripts.inspect_recipe_detail:main
+cookiful-db-inspect-recipes = cookiful_db.scripts.inspect_recipes:main
+cookiful-db-seed = cookiful_db.scripts.seed:main

@@ -1,0 +1,40 @@
+{
+  "name": "cookiful",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "bun@1.1.38",
+  "workspaces": [
+    "apps/web",
+    "apps/mobile",
+    "apps/worker",
+    "packages/ai-tools",
+    "packages/config",
+    "packages/recipe-schema",
+    "packages/types",
+    "packages/ui",
+    "packages/utils"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --filter=@cookiful/web",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "format": "turbo run format",
+    "web:dev": "bun --filter @cookiful/web dev",
+    "web:build": "bun --filter @cookiful/web build",
+    "api:dev": "PYTHONPATH=packages/db/src:$(/usr/bin/python3 -m site --user-site):. /usr/bin/python3 -m uvicorn apps.api.src.main:app --reload --host 0.0.0.0 --port 4000",
+    "db:doctor": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.doctor",
+    "db:migrate": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.apply_migration",
+    "db:seed": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.seed",
+    "db:import:recipes": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.import_recipes_csv packages/recipe-schema/recipes_data.csv",
+    "db:inspect:recipes": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.inspect_recipes",
+    "db:inspect:recipe-detail": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.inspect_recipe_detail",
+    "db:view:create": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.create_recipe_catalog_view",
+    "db:bootstrap": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.bootstrap_local",
+    "db:bootstrap:sample": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.bootstrap_local --limit 1000 --commit-every 100"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  }
+}

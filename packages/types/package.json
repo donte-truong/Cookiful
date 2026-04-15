@@ -1,0 +1,16 @@
+{
+  "name": "@cookiful/types",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "echo \"Build types package\"",
+    "lint": "echo \"Lint types package\"",
+    "test": "echo \"Test types package\"",
+    "typecheck": "echo \"Typecheck types package\"",
+    "format": "echo \"Format types package\""
+  }
+}
+
