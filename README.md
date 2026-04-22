@@ -39,7 +39,6 @@ Mobile is intentionally not being advanced in this phase.
 
 You can also open:
 
-- Adminer at `http://localhost:8080`
 - pgAdmin at `http://localhost:5050`
   Login: `admin@cookiful.dev`
   Password: `cookiful`

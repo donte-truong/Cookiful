@@ -13,8 +13,7 @@ The development compose file starts the core database services used by the DB bo
 
 - Postgres on `localhost:5432`
 - Redis on `localhost:6379`
-- Adminer on `http://localhost:8080`
-- Optional pgAdmin on `http://localhost:5050` with `--profile tools`
+- pgAdmin on `http://localhost:5050` with `--profile tools`
 
 Recommended startup:
 
@@ -22,7 +21,7 @@ Recommended startup:
 docker compose -f infrastructure/docker/docker-compose.dev.yml up -d
 ```
 
-If you want the richer database UI, include the tools profile:
+If you want the database UI, include the tools profile:
 
 ```bash
 docker compose -f infrastructure/docker/docker-compose.dev.yml --profile tools up -d

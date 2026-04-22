@@ -56,7 +56,6 @@ For this environment, the direct Python entrypoints above are the verified path 
 
 Browser tools:
 
-- Adminer: `http://localhost:8080`
 - pgAdmin: `http://localhost:5050`
   Login: `admin@cookiful.dev`
   Password: `cookiful`

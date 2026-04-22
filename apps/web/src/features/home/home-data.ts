@@ -19,12 +19,15 @@ export type HomeQuickAction = {
 };
 
 export type HomeRecipe = {
+  id: string;
   title: string;
   description: string;
   duration: string;
   tag: string;
-  image: string;
+  image?: string | null;
   alt: string;
+  sourceName?: string | null;
+  sourceUrl?: string | null;
 };
 
 export type HomeEditorialMoment = {
@@ -66,49 +69,6 @@ export const homeQuickActions: HomeQuickAction[] = [
   { href: "#curated-feed", label: "Use what I have", icon: PantryIcon },
   { href: "#curated-feed", label: "Meal prep for week", icon: CalendarIcon },
   { href: "#curated-feed", label: "Quick dinner", icon: TimerIcon }
-];
-
-export const curatedRecipes: HomeRecipe[] = [
-  {
-    title: "Pan-Seared Diver Scallops",
-    description:
-      "Master the art of the golden crust with this simple yet sophisticated butter-basting technique.",
-    duration: "20 MIN",
-    tag: "KETO",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBXE3RZO9mzmHpoxztGrqQ2Q9nbfwxhT8ewb8OukKbXyl1albLn_I9gd0hPzLChCH-bSXzavOxgsNNvkxyPjsmIW99qoTxg_tHvLaklR7UxB7BdxlSRSevl8xWDHvWbkUqTAam0A8eC2cm5FlmblDtJhWvLyqL2Vcs8D_LSF4xgP1OQzUP5hO6fCXEp1zu3xYU6HQFeUwduLBbjhmgF-85i6UhxbsHvAXhyEo9teGoYBoDN6xxBhaQTdVwgQjzchh9hqQaZsz7qgV0e",
-    alt: "Close-up of seared scallops with herb butter and microgreens on a white ceramic plate."
-  },
-  {
-    title: "Wild Ramp & Basil Pesto",
-    description:
-      "Hand-crushed seasonal ramps paired with cold-pressed olive oil over artisan trofie pasta.",
-    duration: "45 MIN",
-    tag: "VEGAN",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuATXp7pMQOmKT6f8PJymrTjDzInho5GLxdgGWo8m9EkUujqpoXcrOlSdTgUv-wTplxuZpwlk5YrThqGbNl-G_9v7yXtFiNZ8GL0DKut2kfW3kHOMwHiBG7QLjlh72y6DAl5ixRQa-K5opYO4nc7z5qPUbn__a5kgrxu7OiHklMCA86lhj3J55gI5KHRxID1Zo31pU1gWb-WUpkuZd6VdDq7uYH7ZwUUmYgz9pd0IOUpGz5uDOYlHV_qJKOwyb6m143I0htWyvozsTDV",
-    alt: "Fresh pesto pasta served in a rustic terracotta bowl."
-  },
-  {
-    title: "Crispy Skin Pan-Seared Salmon",
-    description:
-      "Achieve restaurant-quality crisp skin with our precision heat management guide.",
-    duration: "15 MIN",
-    tag: "OMEGA-3",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDl3mtLeRb4X8Zt7R8RCS8VQWk9wpgge6gsRrDRnpMhosG_V_qNkjbRSpJ8BGcuOFgkYDBmQXts0kH8DAY9vxiuBGbQ_im7IgYwqTgpvVC2do1sRXwN-M70bg9N5RnoJqXRcNgIVp5-JViL3Jj0nfM_lFJ-m5ygtXYBhCUDrQX6xlqNFDQa9nR-h77RFiCRkXU1pvdHFaZZ_mw93vNEAbb6WUdHMiFDJA-4xjjRtqU2z37nv0J2zWXJc65nmsvUnvdJ5ecBMJrZ9Y-d",
-    alt: "Crisp-skinned salmon fillet resting on bright greens."
-  },
-  {
-    title: "Wild Mushroom & Thyme Risotto",
-    description:
-      "A slow-stirred classic using earthy forest mushrooms and aged Arborio rice.",
-    duration: "35 MIN",
-    tag: "VEGETARIAN",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCwpiY9n4PjuzTWHvkxeXfGrfv-JkYjukOOcl7UI8jiC_gNlZqszgVzOcQhX_92xmsToB9uPpTecF-WvouSRRoFimnQy8_iWpHsn5cpoR244EMjUR73ueJ_zAuQYK-vviFJ5bGzx9pQDH8XHGP4470Rb5vfAmkvDBLnZSPsqGQ6ZBbiQ34C5rvSw2SbszCiQOVri_Sc4s3i3EgIs80CMvEHOMXFFagTL2WAl_6fWpueRE4wXkEynFqA-vSfwPNXlydixYCAE1SLG1Np",
-    alt: "Creamy mushroom risotto garnished with parsley and shaved parmesan."
-  }
 ];
 
 export const editorialMoments: HomeEditorialMoment[] = [
