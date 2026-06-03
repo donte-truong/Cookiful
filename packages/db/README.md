@@ -6,12 +6,12 @@ Python database foundation for Cookiful.
 
 - defines the PostgreSQL schema in SQLAlchemy models
 - applies the initial SQL migration for the core Cookiful tables
-- imports the recipe CSV dataset into `recipes`, `recipe_versions`, `recipe_ingredients`, and `recipe_steps`
-- provides simple CLI tools for inspecting records and creating a readable recipe catalog view
+- imports the Recipe Box JSON datasets into `recipes`, `recipe_versions`, `recipe_ingredients`, and `recipe_steps`
+- provides a guarded local reset command plus simple CLI tools for inspecting records and creating a readable recipe catalog view
 
 ## The recipes table shape
 
-The `recipes` table stores one canonical row per recipe source entry. The imported CSV data is split into:
+The `recipes` table stores one canonical row per recipe source entry. The imported Recipe Box JSON data is split into:
 
 - `recipes` for the top-level recipe record and source metadata
 - `recipe_versions` for the raw ingredient and direction arrays
@@ -46,7 +46,7 @@ Example:
 
 ```bash
 PYTHONPATH=packages/db/src python -m cookiful_db.scripts.apply_migration
-PYTHONPATH=packages/db/src python -m cookiful_db.scripts.import_recipes_csv packages/recipe-schema/recipes_data.csv
+PYTHONPATH=packages/db/src python -m cookiful_db.scripts.import_recipe_box_json
 PYTHONPATH=packages/db/src python -m cookiful_db.scripts.create_recipe_catalog_view
 ```
 
@@ -102,6 +102,8 @@ LIMIT 10;
 - `cookiful-db-apply-migration`
 - `cookiful-db-seed`
 - `cookiful-db-import-recipes`
+- `cookiful-db-import-recipe-box`
+- `cookiful-db-reset`
 - `cookiful-db-create-recipe-catalog-view`
 - `cookiful-db-bootstrap`
 - `cookiful-db-doctor`
@@ -110,25 +112,24 @@ LIMIT 10;
 
 ## Recipe data shape
 
-The recipe import follows `packages/recipe-schema/recipes_data.csv`:
+The current recipe import follows:
 
-- `title`
-- `ingredients`
-- `directions`
-- `link`
-- `source`
-- `NER`
-- `site`
+- `packages/recipe-schema/data/recipes_raw_nosource_ar.json`
+- `packages/recipe-schema/data/recipes_raw_nosource_epi.json`
+- `packages/recipe-schema/data/recipes_raw_nosource_fn.json`
 
 Those map to:
 
 - `recipes.title`
-- `recipes.source_url`
+- `recipes.source_url` as a stable `recipe-box://<source>/<record_id>` import key
 - `recipes.source_name`
 - `recipes.source_site`
+- `recipes.hero_image_url` when Recipe Box exposes a direct image URL with a valid lowercase DNS host
 - `recipe_versions.raw_ingredients`
 - `recipe_versions.raw_directions`
-- `recipe_versions.raw_ner`
+- `recipe_versions.raw_ner` as an empty list because the new JSON corpus does not include NER rows
+
+The Recipe Box `picture_link` field is not always a browser-displayable URL. The importer only stores it as `hero_image_url` when it is an `http://` or `https://` URL with a valid lowercase DNS host. Token-style image references are intentionally left unset so the web app does not display unrelated fallback photos.
 
 ## Notes
 

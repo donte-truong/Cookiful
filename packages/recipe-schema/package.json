@@ -8,9 +8,8 @@
   "scripts": {
     "build": "echo \"Build recipe schema package\"",
     "lint": "echo \"Lint recipe schema package\"",
-    "test": "echo \"Test recipe schema package\"",
+    "test": "bun test src/index.test.ts",
     "typecheck": "echo \"Typecheck recipe schema package\"",
     "format": "echo \"Format recipe schema package\""
   }
 }
-

@@ -1,0 +1,3 @@
+[submodule "packages/utils/recipe-box"]
+	path = packages/utils/recipe-box
+	url = git@github.com:rtlee9/recipe-box.git

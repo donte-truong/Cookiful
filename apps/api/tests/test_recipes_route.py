@@ -12,7 +12,7 @@ from apps.api.src.api.routes.recipes import (
 from cookiful_db.models import Recipe, RecipeStatus, RecipeVersion, RecipeVisibility
 
 
-def make_recipe(*, title: str = "Archive Onion Tart") -> Recipe:
+def make_recipe(*, title: str = "Archive Onion Tart", hero_image_url: str | None = None) -> Recipe:
     recipe_id = uuid4()
     return Recipe(
         id=recipe_id,
@@ -24,7 +24,7 @@ def make_recipe(*, title: str = "Archive Onion Tart") -> Recipe:
         status=RecipeStatus.PUBLISHED,
         visibility=RecipeVisibility.PUBLIC,
         cuisine_type="French country",
-        hero_image_url=None,
+        hero_image_url=hero_image_url,
     )
 
 
@@ -74,6 +74,18 @@ class SerializeCuratedRecipeTests(unittest.TestCase):
         self.assertEqual(payload.tag, "FRENCH COUNTRY")
         self.assertEqual(payload.image_url, None)
         self.assertEqual(payload.image_alt, "Editorial plating for Archive Onion Tart.")
+
+    def test_serialize_preserves_recipe_image_url(self) -> None:
+        recipe = make_recipe(
+            title="Tomato Soup",
+            hero_image_url="https://images.example.test/tomato-soup.jpg",
+        )
+        version = make_version(recipe.id)
+
+        payload = serialize_curated_recipe(recipe, version)
+
+        self.assertEqual(payload.image_url, "https://images.example.test/tomato-soup.jpg")
+        self.assertEqual(payload.image_alt, "Editorial plating for Tomato Soup.")
 
 
 class ListCuratedRecipesRouteTests(unittest.TestCase):

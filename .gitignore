@@ -15,4 +15,4 @@ __pycache__
 .venv
 
 /.codex
-/packages/recipe-schema/recipes_data.csv
+/packages/recipe-schema/data

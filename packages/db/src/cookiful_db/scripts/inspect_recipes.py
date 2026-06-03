@@ -31,6 +31,7 @@ def print_recipe(recipe: Recipe, version: RecipeVersion | None, show_raw: bool) 
     print(f"  status: {recipe.status.value}")
     print(f"  visibility: {recipe.visibility.value}")
     print(f"  source: {recipe.source_name or '-'} / {recipe.source_site or '-'}")
+    print(f"  image: {recipe.hero_image_url or '-'}")
     if version is None:
         print("  version: none")
         return
@@ -50,6 +51,7 @@ def print_recipe_catalog_rows(rows: list[dict]) -> None:
         print(
             f"{row['title']} | {row['source_url'] or 'no source url'} | "
             f"{row['status']} | v{row['current_version_number'] or '-'} | "
+            f"image {'yes' if row['hero_image_url'] else 'no'} | "
             f"{row['ingredient_count']} ingredients | {row['step_count']} steps"
         )
 
@@ -64,7 +66,7 @@ def main() -> None:
                 rows = session.execute(
                     text(
                         f"""
-                        SELECT title, source_url, status, current_version_number, ingredient_count, step_count
+                        SELECT title, source_url, hero_image_url, status, current_version_number, ingredient_count, step_count
                         FROM {RECIPE_CATALOG_VIEW_NAME}
                         ORDER BY created_at DESC
                         LIMIT :limit

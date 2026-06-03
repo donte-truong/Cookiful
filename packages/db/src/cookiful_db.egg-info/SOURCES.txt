@@ -13,13 +13,16 @@ src/cookiful_db.egg-info/entry_points.txt
 src/cookiful_db.egg-info/requires.txt
 src/cookiful_db.egg-info/top_level.txt
 src/cookiful_db/importers/__init__.py
+src/cookiful_db/importers/recipe_box_json.py
 src/cookiful_db/importers/recipes_csv.py
 src/cookiful_db/scripts/__init__.py
 src/cookiful_db/scripts/apply_migration.py
 src/cookiful_db/scripts/bootstrap_local.py
 src/cookiful_db/scripts/create_recipe_catalog_view.py
 src/cookiful_db/scripts/doctor.py
+src/cookiful_db/scripts/import_recipe_box_json.py
 src/cookiful_db/scripts/import_recipes_csv.py
 src/cookiful_db/scripts/inspect_recipe_detail.py
 src/cookiful_db/scripts/inspect_recipes.py
+src/cookiful_db/scripts/reset_database.py
 src/cookiful_db/scripts/seed.py

@@ -1,13 +1,16 @@
 RECIPE_CATALOG_VIEW_NAME = "recipe_catalog"
 
+DROP_RECIPE_CATALOG_VIEW_SQL = "DROP VIEW IF EXISTS recipe_catalog"
+
 CREATE_RECIPE_CATALOG_VIEW_SQL = """
-CREATE OR REPLACE VIEW recipe_catalog AS
+CREATE VIEW recipe_catalog AS
 SELECT
   r.id,
   r.title,
   r.source_url,
   r.source_name,
   r.source_site,
+  r.hero_image_url,
   r.status,
   r.visibility,
   r.current_version_id,
