@@ -1,50 +1,72 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { startTransition, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import {
+  buildNextCuratedRecipesPageParam,
   fetchCuratedRecipes,
+  flattenCuratedRecipePages,
   HOME_CURATED_RECIPE_LIMIT,
-  mergeExcludedRecipeIds,
 } from "../recipes-client";
 import { ChevronDownIcon } from "./home-icons";
 import { HomeEditorialCard } from "./home-editorial-card";
-import { HomeRecipeCard } from "./home-recipe-card";
+import { HomeRecipeCard, HomeRecipeCardSkeleton } from "./home-recipe-card";
+
+function CuratedRecipeSkeletonGrid({ prefix }: { prefix: string }) {
+  return Array.from({ length: HOME_CURATED_RECIPE_LIMIT }, (_, index) => (
+    <HomeRecipeCardSkeleton key={`${prefix}-${index}`} />
+  ));
+}
+
+function getLoadMoreLabel({
+  hasMoreRecipes,
+  isInitialLoad,
+  isLoadingMore,
+}: {
+  hasMoreRecipes: boolean;
+  isInitialLoad: boolean;
+  isLoadingMore: boolean;
+}): string {
+  if (isInitialLoad) {
+    return "Loading inspiration...";
+  }
+
+  if (isLoadingMore) {
+    return "Loading more inspiration...";
+  }
+
+  if (!hasMoreRecipes) {
+    return "All inspiration loaded";
+  }
+
+  return "Load more inspiration";
+}
 
 export function HomeCuratedSection() {
-  const [excludeIds, setExcludeIds] = useState<string[]>([]);
-  const curatedRecipesQuery = useQuery({
-    queryKey: ["home-curated-recipes", excludeIds],
-    queryFn: () =>
+  const curatedRecipesQuery = useInfiniteQuery({
+    queryKey: ["home-curated-recipes"],
+    queryFn: ({ pageParam }) =>
       fetchCuratedRecipes({
-        excludeIds,
+        excludeIds: pageParam,
         limit: HOME_CURATED_RECIPE_LIMIT,
       }),
-    placeholderData: (previousData) => previousData,
+    initialPageParam: [] as string[],
+    getNextPageParam: (_lastPage, allPages) =>
+      buildNextCuratedRecipesPageParam(allPages, HOME_CURATED_RECIPE_LIMIT),
   });
-  const curatedRecipes = curatedRecipesQuery.data ?? [];
+  const curatedRecipes = flattenCuratedRecipePages(curatedRecipesQuery.data?.pages);
   const hasRecipes = curatedRecipes.length > 0;
   const isInitialLoad = curatedRecipesQuery.isLoading && curatedRecipes.length === 0;
+  const isLoadingMore = curatedRecipesQuery.isFetchingNextPage;
+  const hasMoreRecipes = curatedRecipesQuery.hasNextPage;
+  const loadMoreLabel = getLoadMoreLabel({
+    hasMoreRecipes,
+    isInitialLoad,
+    isLoadingMore,
+  });
 
   function handleLoadMore() {
-    if (curatedRecipes.length === 0) {
-      if (excludeIds.length > 0) {
-        startTransition(() => {
-          setExcludeIds([]);
-        });
-        return;
-      }
-
-      void curatedRecipesQuery.refetch();
-      return;
-    }
-
-    startTransition(() => {
-      setExcludeIds((currentExcludeIds) =>
-        mergeExcludedRecipeIds(currentExcludeIds, curatedRecipes),
-      );
-    });
+    void curatedRecipesQuery.fetchNextPage();
   }
 
   return (
@@ -62,24 +84,27 @@ export function HomeCuratedSection() {
 
           <div className="lg:max-h-[52rem] lg:overflow-y-auto lg:pr-4 lg:[&::-webkit-scrollbar-thumb]:rounded-full lg:[&::-webkit-scrollbar-thumb]:bg-hearth-copper/25 lg:[&::-webkit-scrollbar-track]:bg-hearth-container lg:[&::-webkit-scrollbar]:w-1.5">
             <div className="grid gap-6 md:grid-cols-2">
-              {isInitialLoad
-                ? Array.from({ length: HOME_CURATED_RECIPE_LIMIT }, (_, index) => (
-                    <div
-                      key={`curated-recipe-skeleton-${index}`}
-                      aria-hidden="true"
-                      className="h-[27rem] animate-pulse rounded-[1.8rem] bg-hearth-paper/70 shadow-hearth"
-                    />
-                  ))
-                : hasRecipes
-                  ? curatedRecipes.map((recipe) => (
-                      <HomeRecipeCard key={recipe.id} recipe={recipe} />
-                    ))
-                  : (
-                      <div className="rounded-[1.8rem] bg-hearth-paper px-6 py-10 text-center text-sm leading-7 text-hearth-muted shadow-hearth md:col-span-2">
-                        Curated recipes will appear here as soon as the recipe
-                        database has published entries ready to browse.
-                      </div>
-                    )}
+              {isInitialLoad ? (
+                <CuratedRecipeSkeletonGrid prefix="curated-recipe-skeleton" />
+              ) : null}
+
+              {!isInitialLoad && hasRecipes ? (
+                <>
+                  {curatedRecipes.map((recipe) => (
+                    <HomeRecipeCard key={recipe.id} recipe={recipe} />
+                  ))}
+                  {isLoadingMore ? (
+                    <CuratedRecipeSkeletonGrid prefix="curated-recipe-load-more-skeleton" />
+                  ) : null}
+                </>
+              ) : null}
+
+              {!isInitialLoad && !hasRecipes ? (
+                <div className="rounded-[1.8rem] bg-hearth-paper px-6 py-10 text-center text-sm leading-7 text-hearth-muted shadow-hearth md:col-span-2">
+                  Curated recipes will appear here as soon as the recipe database
+                  has published entries ready to browse.
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -93,15 +118,11 @@ export function HomeCuratedSection() {
           <div className="mt-8 flex justify-center">
             <button
               className="group inline-flex items-center gap-2 text-sm font-bold text-hearth-copper transition hover:gap-3 hover:text-hearth-copperSoft disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:gap-2"
-              disabled={curatedRecipesQuery.isFetching}
+              disabled={curatedRecipesQuery.isFetching || !hasMoreRecipes}
               onClick={handleLoadMore}
               type="button"
             >
-              <span>
-                {curatedRecipesQuery.isFetching
-                  ? "Refreshing inspiration..."
-                  : "Load more inspiration"}
-              </span>
+              <span>{loadMoreLabel}</span>
               <ChevronDownIcon className="h-4 w-4" />
             </button>
           </div>

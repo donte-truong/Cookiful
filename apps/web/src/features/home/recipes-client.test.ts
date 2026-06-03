@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  buildNextCuratedRecipesPageParam,
   buildCuratedRecipesUrl,
   fetchCuratedRecipes,
+  flattenCuratedRecipePages,
   mergeExcludedRecipeIds,
   toHomeRecipe,
 } from "./recipes-client";
@@ -128,5 +130,46 @@ describe("mergeExcludedRecipeIds", () => {
         { id: "recipe-4" },
       ]),
     ).toEqual(["recipe-1", "recipe-2", "recipe-3", "recipe-4"]);
+  });
+});
+
+describe("flattenCuratedRecipePages", () => {
+  it("keeps loaded recipe pages in append order", () => {
+    expect(
+      flattenCuratedRecipePages([
+        [{ id: "recipe-1" }, { id: "recipe-2" }],
+        [{ id: "recipe-3" }],
+      ] as ReturnType<typeof toHomeRecipe>[][]),
+    ).toEqual([{ id: "recipe-1" }, { id: "recipe-2" }, { id: "recipe-3" }]);
+  });
+
+  it("defaults missing query data to an empty recipe list", () => {
+    expect(flattenCuratedRecipePages()).toEqual([]);
+  });
+});
+
+describe("buildNextCuratedRecipesPageParam", () => {
+  it("builds the next exclusion list from all loaded pages", () => {
+    expect(
+      buildNextCuratedRecipesPageParam(
+        [
+          [{ id: "recipe-1" }, { id: "recipe-2" }],
+          [{ id: "recipe-3" }, { id: "recipe-4" }],
+        ] as ReturnType<typeof toHomeRecipe>[][],
+        2,
+      ),
+    ).toEqual(["recipe-1", "recipe-2", "recipe-3", "recipe-4"]);
+  });
+
+  it("stops pagination when the latest page is short", () => {
+    expect(
+      buildNextCuratedRecipesPageParam(
+        [
+          [{ id: "recipe-1" }, { id: "recipe-2" }],
+          [{ id: "recipe-3" }],
+        ] as ReturnType<typeof toHomeRecipe>[][],
+        2,
+      ),
+    ).toBeUndefined();
   });
 });

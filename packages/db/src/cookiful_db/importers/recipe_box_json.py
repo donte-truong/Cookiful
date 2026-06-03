@@ -23,7 +23,7 @@ SOURCE_METADATA = {
     },
 }
 
-SOURCE_KEY_PATTERN = re.compile(r"recipes_raw_nosource_(?P<source_key>[a-z]+)\.json$")
+SOURCE_KEY_PATTERN = re.compile(r"recipes_raw_(?:nosource_)?(?P<source_key>[a-z]+)\.json$")
 ADVERTISEMENT_PATTERN = re.compile(r"\bADVERTISEMENT\b", re.IGNORECASE)
 HOSTNAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9.-]*[a-z0-9]$")
 

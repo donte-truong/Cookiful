@@ -29,6 +29,7 @@
     "db:seed": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.seed",
     "db:reset": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.reset_database",
     "db:import:recipes": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.import_recipe_box_json",
+    "db:scrape:recipe-box-images": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.scrape_recipe_box_images",
     "db:import:recipes:csv": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.import_recipes_csv packages/recipe-schema/recipes_data.csv",
     "db:inspect:recipes": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.inspect_recipes",
     "db:inspect:recipe-detail": "env -i HOME=/home/dontetruong PATH=/usr/bin:/bin PYTHONPATH=packages/db/src /usr/bin/python3 -m cookiful_db.scripts.inspect_recipe_detail",

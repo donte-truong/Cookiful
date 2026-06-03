@@ -23,6 +23,8 @@ type FetchCuratedRecipesOptions = {
   limit?: number;
 };
 
+type RecipeIdOnly = Pick<HomeRecipe, "id">;
+
 export function formatRecipeDurationLabel(durationMinutes: number): string {
   return `${Math.max(1, durationMinutes)} MIN`;
 }
@@ -56,7 +58,7 @@ export function toHomeRecipe(recipe: CuratedRecipeApiRecord): HomeRecipe {
 
 export function mergeExcludedRecipeIds(
   excludedIds: string[],
-  recipes: Array<Pick<HomeRecipe, "id">>,
+  recipes: RecipeIdOnly[],
 ): string[] {
   const nextExcludedIds = new Set(excludedIds);
 
@@ -65,6 +67,22 @@ export function mergeExcludedRecipeIds(
   }
 
   return Array.from(nextExcludedIds);
+}
+
+export function flattenCuratedRecipePages(pages: HomeRecipe[][] = []): HomeRecipe[] {
+  return pages.flat();
+}
+
+export function buildNextCuratedRecipesPageParam(
+  pages: HomeRecipe[][],
+  limit = HOME_CURATED_RECIPE_LIMIT,
+): string[] | undefined {
+  const lastPage = pages.at(-1) ?? [];
+  if (lastPage.length < limit) {
+    return undefined;
+  }
+
+  return mergeExcludedRecipeIds([], pages.flat());
 }
 
 export async function fetchCuratedRecipes(

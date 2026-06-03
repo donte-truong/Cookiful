@@ -1,18 +1,30 @@
 from __future__ import annotations
 
+from functools import lru_cache
+from importlib.util import module_from_spec, spec_from_file_location
+from pathlib import Path
+import re
 from textwrap import shorten
-from typing import Annotated
+from typing import Annotated, Callable
 from uuid import UUID
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import Select, func, select
 
 from cookiful_db import SessionLocal
+from cookiful_db.paths import REPO_ROOT
 from cookiful_db.models import Recipe, RecipeStatus, RecipeVersion, RecipeVisibility
 
 
 router = APIRouter()
+
+RECIPE_BOX_IMAGE_DIR = REPO_ROOT / "packages" / "utils" / "recipe-box" / "data" / "img"
+RECIPE_BOX_UTILS_PATH = REPO_ROOT / "packages" / "utils" / "recipe-box" / "src" / "utils.py"
+RECIPE_BOX_IMAGE_URL_PREFIX = "/api/recipes/images/recipe-box"
+RECIPE_BOX_SOURCE_KEYS = frozenset({"ar", "epi", "fn"})
+RECIPE_BOX_IMAGE_FILENAME_PATTERN = re.compile(r"^[A-Za-z0-9_-]+\.jpg$")
 
 
 class CuratedRecipeResponse(BaseModel):
@@ -31,6 +43,66 @@ class CuratedRecipesResponse(BaseModel):
     recipes: list[CuratedRecipeResponse]
 
 
+@lru_cache(maxsize=1)
+def load_recipe_box_url_to_filename() -> Callable[[str], str]:
+    spec = spec_from_file_location("_cookiful_recipe_box_utils", RECIPE_BOX_UTILS_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load Recipe Box utils from {RECIPE_BOX_UTILS_PATH}.")
+
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    url_to_filename = getattr(module, "URL_to_filename", None)
+    if not callable(url_to_filename):
+        raise RuntimeError("Recipe Box utils.py does not expose URL_to_filename.")
+
+    return url_to_filename
+
+
+def parse_recipe_box_source_url(source_url: str | None) -> tuple[str, str] | None:
+    if source_url is None or not source_url.startswith("recipe-box://"):
+        return None
+
+    source_and_record = source_url.removeprefix("recipe-box://")
+    source_key, separator, record_id = source_and_record.partition("/")
+    if not separator or source_key not in RECIPE_BOX_SOURCE_KEYS or not record_id:
+        return None
+
+    return source_key, record_id
+
+
+def build_recipe_box_image_filename(record_id: str) -> str | None:
+    filename_stem = load_recipe_box_url_to_filename()(record_id)
+    if not filename_stem:
+        return None
+
+    return f"{filename_stem}.jpg"
+
+
+def build_recipe_box_public_image_url(source_url: str | None) -> str | None:
+    parsed_source = parse_recipe_box_source_url(source_url)
+    if parsed_source is None:
+        return None
+
+    source_key, record_id = parsed_source
+    filename = build_recipe_box_image_filename(record_id)
+    if filename is None:
+        return None
+
+    if not (Path(RECIPE_BOX_IMAGE_DIR) / filename).is_file():
+        return None
+
+    return f"{RECIPE_BOX_IMAGE_URL_PREFIX}/{source_key}/{filename}"
+
+
+def build_recipe_image_url(recipe: Recipe) -> str | None:
+    recipe_box_image_url = build_recipe_box_public_image_url(recipe.source_url)
+    if recipe_box_image_url is not None:
+        return recipe_box_image_url
+
+    return recipe.hero_image_url
+
+
 def build_curated_recipes_query(limit: int, exclude_ids: list[UUID]) -> Select[tuple[Recipe, RecipeVersion | None]]:
     statement = (
         select(Recipe, RecipeVersion)
@@ -39,6 +111,7 @@ def build_curated_recipes_query(limit: int, exclude_ids: list[UUID]) -> Select[t
             Recipe.status == RecipeStatus.PUBLISHED,
             Recipe.visibility == RecipeVisibility.PUBLIC,
             Recipe.current_version_id.is_not(None),
+            Recipe.hero_image_url.is_not(None),
         )
     )
 
@@ -115,11 +188,23 @@ def serialize_curated_recipe(recipe: Recipe, version: RecipeVersion | None) -> C
         description=build_recipe_description(recipe, version),
         duration_minutes=build_recipe_duration_minutes(recipe, version),
         tag=build_recipe_tag(recipe),
-        image_url=recipe.hero_image_url,
+        image_url=build_recipe_image_url(recipe),
         image_alt=f"Editorial plating for {recipe.title}.",
         source_name=recipe.source_name,
         source_url=recipe.source_url,
     )
+
+
+@router.get("/images/recipe-box/{source_key}/{filename}")
+def get_recipe_box_image(source_key: str, filename: str) -> FileResponse:
+    if source_key not in RECIPE_BOX_SOURCE_KEYS or RECIPE_BOX_IMAGE_FILENAME_PATTERN.fullmatch(filename) is None:
+        raise HTTPException(status_code=404, detail="Recipe image not found.")
+
+    image_path = Path(RECIPE_BOX_IMAGE_DIR) / filename
+    if not image_path.is_file():
+        raise HTTPException(status_code=404, detail="Recipe image not found.")
+
+    return FileResponse(image_path, media_type="image/jpeg")
 
 
 @router.get("/curated", response_model=CuratedRecipesResponse)

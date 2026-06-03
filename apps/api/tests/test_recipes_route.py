@@ -1,18 +1,28 @@
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
+from fastapi import HTTPException
 from sqlalchemy.dialects import postgresql
 
 from apps.api.src.api.routes.recipes import (
+    build_recipe_box_public_image_url,
     build_curated_recipes_query,
+    get_recipe_box_image,
     list_curated_recipes,
     serialize_curated_recipe,
 )
 from cookiful_db.models import Recipe, RecipeStatus, RecipeVersion, RecipeVisibility
 
 
-def make_recipe(*, title: str = "Archive Onion Tart", hero_image_url: str | None = None) -> Recipe:
+def make_recipe(
+    *,
+    title: str = "Archive Onion Tart",
+    hero_image_url: str | None = None,
+    source_url: str | None = None,
+) -> Recipe:
     recipe_id = uuid4()
     return Recipe(
         id=recipe_id,
@@ -21,6 +31,7 @@ def make_recipe(*, title: str = "Archive Onion Tart", hero_image_url: str | None
         description=None,
         source_name="Cookiful Archive",
         source_site="archive.cookiful.dev",
+        source_url=source_url,
         status=RecipeStatus.PUBLISHED,
         visibility=RecipeVisibility.PUBLIC,
         cuisine_type="French country",
@@ -55,7 +66,8 @@ class BuildCuratedRecipesQueryTests(unittest.TestCase):
             )
         )
 
-        self.assertIn("ORDER BY random()", compiled_sql)
+        self.assertIn("random()", compiled_sql)
+        self.assertIn("recipes.hero_image_url IS NOT NULL", compiled_sql)
         self.assertIn("LIMIT 4", compiled_sql)
         self.assertIn(str(excluded_id), compiled_sql)
         self.assertIn("recipes.current_version_id IS NOT NULL", compiled_sql)
@@ -86,6 +98,65 @@ class SerializeCuratedRecipeTests(unittest.TestCase):
 
         self.assertEqual(payload.image_url, "https://images.example.test/tomato-soup.jpg")
         self.assertEqual(payload.image_alt, "Editorial plating for Tomato Soup.")
+
+    def test_serialize_builds_recipe_box_image_url_from_source_url(self) -> None:
+        recipe = make_recipe(
+            title="Sour Cream Noodle Bake",
+            source_url="recipe-box://fn/5l1yTSYFifF/M2dfbD6DX28WWQpLWNK",
+        )
+        version = make_version(recipe.id)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            image_path = Path(tmpdir) / "5l1yTSYFifFM2dfbD6DX28WWQpLWNK.jpg"
+            image_path.write_bytes(b"jpg")
+
+            with patch("apps.api.src.api.routes.recipes.RECIPE_BOX_IMAGE_DIR", Path(tmpdir)):
+                payload = serialize_curated_recipe(recipe, version)
+
+        self.assertEqual(
+            payload.image_url,
+            "/api/recipes/images/recipe-box/fn/5l1yTSYFifFM2dfbD6DX28WWQpLWNK.jpg",
+        )
+
+
+class RecipeBoxImageRouteTests(unittest.TestCase):
+    def test_build_recipe_box_public_image_url_uses_recipe_box_filename_rules(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            image_path = Path(tmpdir) / "S7aeOIrsrgT0jLP32jKGg4jo9zi2DO.jpg"
+            image_path.write_bytes(b"jpg")
+
+            with patch("apps.api.src.api.routes.recipes.RECIPE_BOX_IMAGE_DIR", Path(tmpdir)):
+                self.assertEqual(
+                    build_recipe_box_public_image_url("recipe-box://fn/S7aeOIrsrgT0jLP32jKGg4j.o9zi2DO"),
+                    "/api/recipes/images/recipe-box/fn/S7aeOIrsrgT0jLP32jKGg4jo9zi2DO.jpg",
+                )
+
+    def test_build_recipe_box_public_image_url_skips_missing_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch("apps.api.src.api.routes.recipes.RECIPE_BOX_IMAGE_DIR", Path(tmpdir)):
+                self.assertIsNone(
+                    build_recipe_box_public_image_url("recipe-box://fn/S7aeOIrsrgT0jLP32jKGg4j.o9zi2DO")
+                )
+
+    def test_get_recipe_box_image_serves_existing_utility_image(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            image_path = Path(tmpdir) / "recipe-image.jpg"
+            image_path.write_bytes(b"jpg")
+
+            with patch("apps.api.src.api.routes.recipes.RECIPE_BOX_IMAGE_DIR", Path(tmpdir)):
+                response = get_recipe_box_image("fn", image_path.name)
+
+        self.assertEqual(Path(response.path), image_path)
+        self.assertEqual(response.media_type, "image/jpeg")
+
+    def test_get_recipe_box_image_rejects_missing_or_unsafe_images(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch("apps.api.src.api.routes.recipes.RECIPE_BOX_IMAGE_DIR", Path(tmpdir)):
+                with self.assertRaises(HTTPException):
+                    get_recipe_box_image("fn", "../secret.jpg")
+
+                with self.assertRaises(HTTPException):
+                    get_recipe_box_image("fn", "missing.jpg")
 
 
 class ListCuratedRecipesRouteTests(unittest.TestCase):

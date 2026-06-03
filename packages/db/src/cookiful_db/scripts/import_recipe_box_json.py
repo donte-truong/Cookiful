@@ -5,7 +5,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cookiful_db.database import SessionLocal
-from cookiful_db.importers.recipe_box_json import RecipeBoxJsonStats, iter_recipe_box_json
+from cookiful_db.importers.recipe_box_json import (
+    RecipeBoxJsonStats,
+    RecipeBoxRecipeRecord,
+    iter_recipe_box_json,
+)
 from cookiful_db.models import Recipe, RecipeIngredient, RecipeStatus, RecipeStep, RecipeVersion, RecipeVisibility
 from cookiful_db.paths import RECIPE_BOX_JSON_PATHS
 
@@ -14,6 +18,7 @@ from cookiful_db.paths import RECIPE_BOX_JSON_PATHS
 class RecipeBoxImportResult:
     processed: int
     inserted: int
+    updated: int
     skipped: int
     discarded: int
     image_urls: int
@@ -25,11 +30,20 @@ def format_import_result(result: RecipeBoxImportResult) -> str:
         "Recipe Box import complete. "
         f"Processed={result.processed} "
         f"Inserted={result.inserted} "
+        f"Updated={result.updated} "
         f"Skipped={result.skipped} "
         f"Discarded={result.discarded} "
         f"ImageURLs={result.image_urls} "
         f"ImageReferences={result.image_references}"
     )
+
+
+def backfill_recipe_image_url(recipe: Recipe, record: RecipeBoxRecipeRecord) -> bool:
+    if recipe.hero_image_url is not None or record.image.url is None:
+        return False
+
+    recipe.hero_image_url = record.image.url
+    return True
 
 
 def import_recipe_box_json(
@@ -43,6 +57,7 @@ def import_recipe_box_json(
         raise ValueError("limit must be greater than zero when provided.")
 
     inserted = 0
+    updated = 0
     skipped = 0
     processed = 0
     aggregate_stats = RecipeBoxJsonStats()
@@ -55,7 +70,17 @@ def import_recipe_box_json(
                 processed += 1
                 existing = session.query(Recipe).filter(Recipe.source_url == record.source_url).one_or_none()
                 if existing is not None:
-                    skipped += 1
+                    if backfill_recipe_image_url(existing, record):
+                        updated += 1
+                    else:
+                        skipped += 1
+
+                    if processed % commit_every == 0:
+                        session.commit()
+                        print(
+                            f"Processed {processed} rows | "
+                            f"inserted={inserted} updated={updated} skipped={skipped}"
+                        )
                     continue
 
                 recipe = Recipe(
@@ -109,7 +134,10 @@ def import_recipe_box_json(
 
                 if processed % commit_every == 0:
                     session.commit()
-                    print(f"Processed {processed} rows | inserted={inserted} skipped={skipped}")
+                    print(
+                        f"Processed {processed} rows | "
+                        f"inserted={inserted} updated={updated} skipped={skipped}"
+                    )
 
                 if limit is not None and inserted >= limit:
                     reached_limit = True
@@ -137,6 +165,7 @@ def import_recipe_box_json(
     result = RecipeBoxImportResult(
         processed=processed,
         inserted=inserted,
+        updated=updated,
         skipped=skipped,
         discarded=aggregate_stats.discarded,
         image_urls=aggregate_stats.image_urls,

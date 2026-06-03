@@ -129,7 +129,15 @@ Those map to:
 - `recipe_versions.raw_directions`
 - `recipe_versions.raw_ner` as an empty list because the new JSON corpus does not include NER rows
 
-The Recipe Box `picture_link` field is not always a browser-displayable URL. The importer only stores it as `hero_image_url` when it is an `http://` or `https://` URL with a valid lowercase DNS host. Token-style image references are intentionally left unset so the web app does not display unrelated fallback photos.
+The Recipe Box `picture_link` field is not always a browser-displayable URL. The importer only stores it as `hero_image_url` when it is an `http://` or `https://` URL with a valid lowercase DNS host. Token-style image references remain unset in Postgres, but the curated API can derive a local Recipe Box image URL from `recipes.source_url` when matching JPGs have been downloaded into `packages/utils/recipe-box/data/img` with the Recipe Box utility.
+
+To create local image-backed Recipe Box records for the curated feed, run:
+
+```bash
+bun run db:scrape:recipe-box-images
+```
+
+The script scrapes a small Epicurious starter set, writes URL-keyed Recipe Box JSON to `packages/utils/recipe-box/data/recipes_raw_epi.json`, downloads matching JPGs to `packages/utils/recipe-box/data/img`, and imports those records into Postgres.
 
 ## Notes
 

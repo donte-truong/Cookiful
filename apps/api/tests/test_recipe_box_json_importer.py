@@ -16,6 +16,7 @@ from cookiful_db.importers.recipe_box_json import (
 class RecipeBoxJsonImporterTests(unittest.TestCase):
     def test_infers_supported_source_key_from_dataset_filename(self) -> None:
         self.assertEqual(infer_source_key("recipes_raw_nosource_ar.json"), "ar")
+        self.assertEqual(infer_source_key("recipes_raw_epi.json"), "epi")
         self.assertEqual(infer_source_key(Path("/tmp/recipes_raw_nosource_epi.json")), "epi")
 
         with self.assertRaises(ValueError):
