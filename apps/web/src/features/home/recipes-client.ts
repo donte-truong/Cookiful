@@ -1,4 +1,7 @@
 import type { HomeRecipe } from "./home-data";
+import { formatRecipeDurationLabel } from "../recipes/recipe-formatters";
+
+export { formatRecipeDurationLabel };
 
 export const HOME_CURATED_RECIPE_LIMIT = 4;
 
@@ -24,10 +27,6 @@ type FetchCuratedRecipesOptions = {
 };
 
 type RecipeIdOnly = Pick<HomeRecipe, "id">;
-
-export function formatRecipeDurationLabel(durationMinutes: number): string {
-  return `${Math.max(1, durationMinutes)} MIN`;
-}
 
 export function buildCuratedRecipesUrl({
   excludeIds = [],
