@@ -181,6 +181,62 @@ export function HeartIcon({ className }: IconProps) {
   );
 }
 
+export function BookmarkIcon({ className }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M7.2 4.4H16.8C17.5 4.4 18.1 5 18.1 5.7V20L12 16.3L5.9 20V5.7C5.9 5 6.5 4.4 7.2 4.4Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+export function RepostIcon({ className }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M17 4.8L20 7.8L17 10.8"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.9"
+      />
+      <path
+        d="M4.6 11V10.4C4.6 8.9 5.8 7.8 7.2 7.8H20"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.9"
+      />
+      <path
+        d="M7 19.2L4 16.2L7 13.2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.9"
+      />
+      <path
+        d="M19.4 13V13.6C19.4 15.1 18.2 16.2 16.8 16.2H4"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.9"
+      />
+    </svg>
+  );
+}
+
 export function SparkIcon({ className }: IconProps) {
   return (
     <svg

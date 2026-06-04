@@ -4,23 +4,70 @@ import Link from "next/link";
 import { useState } from "react";
 
 import type { HomeRecipe } from "../home-data";
+import { BookmarkIcon, HeartIcon, RepostIcon } from "./home-icons";
 
 type HomeRecipeCardProps = {
   recipe: HomeRecipe;
 };
 
+type RecipeSocialAction = "like" | "save" | "repost";
+
+type RecipeSocialButton = {
+  action: RecipeSocialAction;
+  label: string;
+  Icon: typeof HeartIcon;
+};
+
+const recipeSocialButtons: RecipeSocialButton[] = [
+  {
+    action: "like",
+    label: "Like recipe",
+    Icon: HeartIcon,
+  },
+  {
+    action: "save",
+    label: "Save recipe",
+    Icon: BookmarkIcon,
+  },
+  {
+    action: "repost",
+    label: "Repost recipe",
+    Icon: RepostIcon,
+  },
+];
+
 export function HomeRecipeCard({ recipe }: HomeRecipeCardProps) {
   const [imageFailed, setImageFailed] = useState(false);
+  const [isOpeningRecipe, setIsOpeningRecipe] = useState(false);
+  const [activeSocialActions, setActiveSocialActions] = useState<
+    Record<RecipeSocialAction, boolean>
+  >({
+    like: false,
+    save: false,
+    repost: false,
+  });
   const imageSrc = !imageFailed && recipe.image ? recipe.image : undefined;
   const hasImage = imageSrc !== undefined;
 
+  function handleOpenRecipe() {
+    setIsOpeningRecipe(true);
+  }
+
+  function handleSocialAction(action: RecipeSocialAction) {
+    setActiveSocialActions((currentActions) => ({
+      ...currentActions,
+      [action]: !currentActions[action],
+    }));
+  }
+
   return (
-    <Link
-      aria-label={`Open ${recipe.title}`}
-      className="group block"
-      href={`/recipes/${recipe.id}`}
-    >
-      <article className="overflow-hidden rounded-[1.8rem] bg-hearth-paper shadow-hearth transition duration-300 group-hover:-translate-y-1">
+    <article className="group relative overflow-hidden rounded-[1.8rem] bg-hearth-paper shadow-hearth transition duration-300 hover:-translate-y-1">
+      <Link
+        aria-label={`Open ${recipe.title}`}
+        className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-hearth-copper/60"
+        href={`/recipes/${recipe.id}`}
+        onClick={handleOpenRecipe}
+      >
         <div className="relative h-64 overflow-hidden">
           {hasImage ? (
             <img
@@ -54,7 +101,7 @@ export function HomeRecipeCard({ recipe }: HomeRecipeCardProps) {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="px-6 pb-4 pt-6">
           <h3 className="font-display text-[1.5rem] leading-tight tracking-[-0.03em] text-hearth-text transition group-hover:text-hearth-copper">
             {recipe.title}
           </h3>
@@ -67,8 +114,47 @@ export function HomeRecipeCard({ recipe }: HomeRecipeCardProps) {
             </p>
           ) : null}
         </div>
-      </article>
-    </Link>
+      </Link>
+
+      <div className="flex items-center gap-2 px-5 pb-5">
+        <div className="flex items-center gap-2">
+          {recipeSocialButtons.map(({ action, label, Icon }) => {
+            const isActive = activeSocialActions[action];
+
+            return (
+              <button
+                aria-label={`${label}: ${recipe.title}`}
+                aria-pressed={isActive}
+                className={`recipe-social-button grid h-11 w-11 place-items-center rounded-full bg-hearth-low text-hearth-muted transition duration-300 hover:-translate-y-0.5 hover:bg-hearth-blush hover:text-hearth-copper focus:outline-none focus-visible:ring-2 focus-visible:ring-hearth-copper/50 ${
+                  isActive ? "is-active text-hearth-copper" : ""
+                }`}
+                key={action}
+                onClick={() => {
+                  handleSocialAction(action);
+                }}
+                type="button"
+              >
+                <Icon className="h-5 w-5" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {isOpeningRecipe ? (
+        <div
+          aria-live="polite"
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-hearth-surface/82 px-8 text-center backdrop-blur-md"
+        >
+          <div className="recipe-card-fetch-loader grid h-20 w-20 place-items-center rounded-full bg-hearth-paper shadow-hearth">
+            <span className="h-10 w-10 rounded-full border-2 border-hearth-ghost border-t-hearth-copper" />
+          </div>
+          <p className="font-display text-[1.35rem] italic tracking-[-0.03em] text-hearth-text">
+            Warming the recipe...
+          </p>
+        </div>
+      ) : null}
+    </article>
   );
 }
 

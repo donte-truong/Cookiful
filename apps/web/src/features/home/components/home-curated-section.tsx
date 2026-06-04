@@ -1,6 +1,7 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 
 import {
   buildNextCuratedRecipesPageParam,
@@ -43,6 +44,9 @@ function getLoadMoreLabel({
 }
 
 export function HomeCuratedSection() {
+  const feedScrollContainerRef = useRef<HTMLDivElement>(null);
+  const shouldScrollAfterLoadRef = useRef(false);
+  const pageCountBeforeLoadRef = useRef(0);
   const curatedRecipesQuery = useInfiniteQuery({
     queryKey: ["home-curated-recipes"],
     queryFn: ({ pageParam }) =>
@@ -64,10 +68,34 @@ export function HomeCuratedSection() {
     isInitialLoad,
     isLoadingMore,
   });
+  const loadedPageCount = curatedRecipesQuery.data?.pages.length ?? 0;
 
   function handleLoadMore() {
+    shouldScrollAfterLoadRef.current = true;
+    pageCountBeforeLoadRef.current = loadedPageCount;
     void curatedRecipesQuery.fetchNextPage();
   }
+
+  useEffect(() => {
+    if (!shouldScrollAfterLoadRef.current || isLoadingMore) {
+      return;
+    }
+
+    if (loadedPageCount <= pageCountBeforeLoadRef.current) {
+      shouldScrollAfterLoadRef.current = false;
+      return;
+    }
+
+    shouldScrollAfterLoadRef.current = false;
+    window.requestAnimationFrame(() => {
+      const feedScrollContainer = feedScrollContainerRef.current;
+
+      feedScrollContainer?.scrollTo({
+        top: feedScrollContainer.scrollHeight,
+        behavior: "smooth",
+      });
+    });
+  }, [isLoadingMore, loadedPageCount]);
 
   return (
     <section className="pb-20 pt-4 sm:pb-24" id="curated-feed">
@@ -82,7 +110,10 @@ export function HomeCuratedSection() {
             </p>
           </div>
 
-          <div className="lg:max-h-[52rem] lg:overflow-y-auto lg:pr-4 lg:[&::-webkit-scrollbar-thumb]:rounded-full lg:[&::-webkit-scrollbar-thumb]:bg-hearth-copper/25 lg:[&::-webkit-scrollbar-track]:bg-hearth-container lg:[&::-webkit-scrollbar]:w-1.5">
+          <div
+            className="lg:max-h-[52rem] lg:overflow-y-auto lg:pr-4 lg:[&::-webkit-scrollbar-thumb]:rounded-full lg:[&::-webkit-scrollbar-thumb]:bg-hearth-copper/25 lg:[&::-webkit-scrollbar-track]:bg-hearth-container lg:[&::-webkit-scrollbar]:w-1.5"
+            ref={feedScrollContainerRef}
+          >
             <div className="grid gap-6 md:grid-cols-2">
               {isInitialLoad ? (
                 <CuratedRecipeSkeletonGrid prefix="curated-recipe-skeleton" />
