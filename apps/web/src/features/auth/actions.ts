@@ -3,11 +3,10 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from "./session";
 import type { AuthFormState } from "./types";
 
 const DEFAULT_LOCAL_API_BASE_URL = "http://localhost:4000/api";
-const ACCESS_TOKEN_COOKIE = "cookiful_access_token";
-const REFRESH_TOKEN_COOKIE = "cookiful_refresh_token";
 const ACCESS_TOKEN_MAX_AGE_SECONDS = 60 * 15;
 const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 

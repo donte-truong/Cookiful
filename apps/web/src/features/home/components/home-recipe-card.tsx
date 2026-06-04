@@ -1,16 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
+import { updateRecipeSocialAction, type RecipeSocialAction } from "../../social/actions";
 import type { HomeRecipe } from "../home-data";
 import { BookmarkIcon, HeartIcon, RepostIcon } from "./home-icons";
 
 type HomeRecipeCardProps = {
   recipe: HomeRecipe;
+  initialSocialActions?: RecipeSocialActionState;
 };
 
-type RecipeSocialAction = "like" | "save" | "repost";
+type RecipeSocialActionState = {
+  liked: boolean;
+  saved: boolean;
+  reposted: boolean;
+};
 
 type RecipeSocialButton = {
   action: RecipeSocialAction;
@@ -36,16 +42,63 @@ const recipeSocialButtons: RecipeSocialButton[] = [
   },
 ];
 
-export function HomeRecipeCard({ recipe }: HomeRecipeCardProps) {
+const defaultSocialActions: RecipeSocialActionState = {
+  liked: false,
+  saved: false,
+  reposted: false,
+};
+
+function getActionValue(
+  socialActions: RecipeSocialActionState,
+  action: RecipeSocialAction,
+): boolean {
+  if (action === "like") {
+    return socialActions.liked;
+  }
+
+  if (action === "save") {
+    return socialActions.saved;
+  }
+
+  return socialActions.reposted;
+}
+
+function setActionValue(
+  socialActions: RecipeSocialActionState,
+  action: RecipeSocialAction,
+  value: boolean,
+): RecipeSocialActionState {
+  if (action === "like") {
+    return {
+      ...socialActions,
+      liked: value,
+    };
+  }
+
+  if (action === "save") {
+    return {
+      ...socialActions,
+      saved: value,
+    };
+  }
+
+  return {
+    ...socialActions,
+    reposted: value,
+  };
+}
+
+export function HomeRecipeCard({
+  recipe,
+  initialSocialActions = defaultSocialActions,
+}: HomeRecipeCardProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const [isOpeningRecipe, setIsOpeningRecipe] = useState(false);
-  const [activeSocialActions, setActiveSocialActions] = useState<
-    Record<RecipeSocialAction, boolean>
-  >({
-    like: false,
-    save: false,
-    repost: false,
-  });
+  const [isSocialActionPending, startSocialActionTransition] = useTransition();
+  const [socialActionMessage, setSocialActionMessage] = useState("");
+  const [activeSocialActions, setActiveSocialActions] = useState<RecipeSocialActionState>(
+    initialSocialActions,
+  );
   const imageSrc = !imageFailed && recipe.image ? recipe.image : undefined;
   const hasImage = imageSrc !== undefined;
 
@@ -54,10 +107,27 @@ export function HomeRecipeCard({ recipe }: HomeRecipeCardProps) {
   }
 
   function handleSocialAction(action: RecipeSocialAction) {
-    setActiveSocialActions((currentActions) => ({
-      ...currentActions,
-      [action]: !currentActions[action],
-    }));
+    const nextActive = !getActionValue(activeSocialActions, action);
+    const previousActions = activeSocialActions;
+
+    setSocialActionMessage("");
+    setActiveSocialActions(setActionValue(activeSocialActions, action, nextActive));
+
+    startSocialActionTransition(() => {
+      void updateRecipeSocialAction({
+        recipeId: recipe.id,
+        action,
+        active: nextActive,
+      }).then((result) => {
+        if (result.status === "success") {
+          setActiveSocialActions(result.actions);
+          return;
+        }
+
+        setActiveSocialActions(previousActions);
+        setSocialActionMessage(result.message);
+      });
+    });
   }
 
   return (
@@ -119,7 +189,7 @@ export function HomeRecipeCard({ recipe }: HomeRecipeCardProps) {
       <div className="flex items-center gap-2 px-5 pb-5">
         <div className="flex items-center gap-2">
           {recipeSocialButtons.map(({ action, label, Icon }) => {
-            const isActive = activeSocialActions[action];
+            const isActive = getActionValue(activeSocialActions, action);
 
             return (
               <button
@@ -128,6 +198,7 @@ export function HomeRecipeCard({ recipe }: HomeRecipeCardProps) {
                 className={`recipe-social-button grid h-11 w-11 place-items-center rounded-full bg-hearth-low text-hearth-muted transition duration-300 hover:-translate-y-0.5 hover:bg-hearth-blush hover:text-hearth-copper focus:outline-none focus-visible:ring-2 focus-visible:ring-hearth-copper/50 ${
                   isActive ? "is-active text-hearth-copper" : ""
                 }`}
+                disabled={isSocialActionPending}
                 key={action}
                 onClick={() => {
                   handleSocialAction(action);
@@ -139,6 +210,9 @@ export function HomeRecipeCard({ recipe }: HomeRecipeCardProps) {
             );
           })}
         </div>
+        <p aria-live="polite" className="sr-only">
+          {socialActionMessage}
+        </p>
       </div>
 
       {isOpeningRecipe ? (

@@ -164,6 +164,37 @@ def create_jwt(claims: dict[str, Any], secret: str) -> str:
     return f"{encoded_header}.{encoded_payload}.{b64url_encode(signature)}"
 
 
+def decode_jwt(token: str, secret: str) -> dict[str, Any] | None:
+    try:
+        encoded_header, encoded_payload, encoded_signature = token.split(".", 2)
+        signing_input = f"{encoded_header}.{encoded_payload}".encode("ascii")
+        expected_signature = hmac.new(secret.encode("utf-8"), signing_input, hashlib.sha256).digest()
+        signature = b64url_decode(encoded_signature)
+        payload = json.loads(b64url_decode(encoded_payload))
+    except (ValueError, binascii.Error, json.JSONDecodeError, UnicodeDecodeError):
+        return None
+
+    if not hmac.compare_digest(signature, expected_signature):
+        return None
+
+    if not isinstance(payload, dict):
+        return None
+
+    exp = payload.get("exp")
+    if not isinstance(exp, int) or exp < int(datetime.now(UTC).timestamp()):
+        return None
+
+    return payload
+
+
+def decode_access_token(token: str) -> dict[str, Any] | None:
+    payload = decode_jwt(token, get_settings().jwt_access_secret)
+    if payload is None or payload.get("token_type") != "access":
+        return None
+
+    return payload
+
+
 def build_auth_tokens(user: User, now: datetime | None = None) -> tuple[str, str]:
     settings = get_settings()
     issued_at = now or datetime.now(UTC)

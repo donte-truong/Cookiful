@@ -40,13 +40,13 @@ export function HomeHeader() {
           >
             <ShoppingBagIcon className="h-[1.125rem] w-[1.125rem]" />
           </button>
-          <button
+          <Link
             aria-label="Profile"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/70"
-            type="button"
+            href="/profile"
           >
             <ProfileIcon className="h-[1.125rem] w-[1.125rem]" />
-          </button>
+          </Link>
         </div>
       </div>
     </header>

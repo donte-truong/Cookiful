@@ -16,3 +16,4 @@ RECIPE_BOX_JSON_PATHS = (
     RECIPE_BOX_DATA_DIR / "recipes_raw_nosource_fn.json",
 )
 INITIAL_MIGRATION_PATH = REPO_ROOT / "packages" / "db" / "migrations" / "202604120001_initial_foundation.sql"
+MIGRATIONS_DIR = REPO_ROOT / "packages" / "db" / "migrations"

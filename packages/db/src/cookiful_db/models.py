@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Text, UniqueConstraint, func
+from sqlalchemy import CheckConstraint, DateTime, Enum, ForeignKey, Integer, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -81,6 +81,7 @@ class User(Base):
     authored_recipes: Mapped[list["Recipe"]] = relationship(back_populates="author")
     cooking_sessions: Mapped[list["CookingSession"]] = relationship(back_populates="user")
     ai_interactions: Mapped[list["AiInteraction"]] = relationship(back_populates="user")
+    recipe_social_actions: Mapped[list["UserRecipeSocialAction"]] = relationship(back_populates="user")
 
 
 class UserProfile(Base):
@@ -142,6 +143,24 @@ class Recipe(Base):
     versions: Mapped[list["RecipeVersion"]] = relationship(back_populates="recipe", foreign_keys="RecipeVersion.recipe_id")
     current_version: Mapped["RecipeVersion | None"] = relationship(foreign_keys=[current_version_id], post_update=True)
     cooking_sessions: Mapped[list["CookingSession"]] = relationship(back_populates="recipe")
+    social_actions: Mapped[list["UserRecipeSocialAction"]] = relationship(back_populates="recipe")
+
+
+class UserRecipeSocialAction(Base):
+    __tablename__ = "user_recipe_social_actions"
+    __table_args__ = (
+        UniqueConstraint("user_id", "recipe_id", "action_type", name="uq_user_recipe_social_actions_user_recipe_action"),
+        CheckConstraint("action_type IN ('like', 'save', 'repost')", name="ck_user_recipe_social_actions_action_type"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    recipe_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False)
+    action_type: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = created_at_column()
+
+    user: Mapped["User"] = relationship(back_populates="recipe_social_actions")
+    recipe: Mapped["Recipe"] = relationship(back_populates="social_actions")
 
 
 class RecipeVersion(Base):
