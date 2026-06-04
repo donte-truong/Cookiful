@@ -43,6 +43,11 @@ class CuratedRecipesResponse(BaseModel):
     recipes: list[CuratedRecipeResponse]
 
 
+class RecipeDetailResponse(CuratedRecipeResponse):
+    ingredients: list[str]
+    instructions: list[str]
+
+
 @lru_cache(maxsize=1)
 def load_recipe_box_url_to_filename() -> Callable[[str], str]:
     spec = spec_from_file_location("_cookiful_recipe_box_utils", RECIPE_BOX_UTILS_PATH)
@@ -121,6 +126,19 @@ def build_curated_recipes_query(limit: int, exclude_ids: list[UUID]) -> Select[t
     return statement.order_by(func.random()).limit(limit)
 
 
+def build_recipe_detail_query(recipe_id: UUID) -> Select[tuple[Recipe, RecipeVersion | None]]:
+    return (
+        select(Recipe, RecipeVersion)
+        .outerjoin(RecipeVersion, RecipeVersion.id == Recipe.current_version_id)
+        .where(
+            Recipe.id == recipe_id,
+            Recipe.status == RecipeStatus.PUBLISHED,
+            Recipe.visibility == RecipeVisibility.PUBLIC,
+            Recipe.current_version_id.is_not(None),
+        )
+    )
+
+
 def build_recipe_description(recipe: Recipe, version: RecipeVersion | None) -> str:
     description = (recipe.description or "").strip()
     if description:
@@ -195,6 +213,14 @@ def serialize_curated_recipe(recipe: Recipe, version: RecipeVersion | None) -> C
     )
 
 
+def serialize_recipe_detail(recipe: Recipe, version: RecipeVersion | None) -> RecipeDetailResponse:
+    return RecipeDetailResponse(
+        **serialize_curated_recipe(recipe, version).model_dump(),
+        ingredients=list(version.raw_ingredients or []) if version is not None else [],
+        instructions=list(version.raw_directions or []) if version is not None else [],
+    )
+
+
 @router.get("/images/recipe-box/{source_key}/{filename}")
 def get_recipe_box_image(source_key: str, filename: str) -> FileResponse:
     if source_key not in RECIPE_BOX_SOURCE_KEYS or RECIPE_BOX_IMAGE_FILENAME_PATTERN.fullmatch(filename) is None:
@@ -220,3 +246,15 @@ def list_curated_recipes(
     return CuratedRecipesResponse(
         recipes=[serialize_curated_recipe(recipe, version) for recipe, version in rows]
     )
+
+
+@router.get("/{recipe_id}", response_model=RecipeDetailResponse)
+def get_recipe_detail(recipe_id: UUID) -> RecipeDetailResponse:
+    with SessionLocal() as session:
+        row = session.execute(build_recipe_detail_query(recipe_id)).one_or_none()
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Recipe not found.")
+
+    recipe, version = row
+    return serialize_recipe_detail(recipe, version)

@@ -10,9 +10,12 @@ from sqlalchemy.dialects import postgresql
 from apps.api.src.api.routes.recipes import (
     build_recipe_box_public_image_url,
     build_curated_recipes_query,
+    build_recipe_detail_query,
+    get_recipe_detail,
     get_recipe_box_image,
     list_curated_recipes,
     serialize_curated_recipe,
+    serialize_recipe_detail,
 )
 from cookiful_db.models import Recipe, RecipeStatus, RecipeVersion, RecipeVisibility
 
@@ -73,6 +76,24 @@ class BuildCuratedRecipesQueryTests(unittest.TestCase):
         self.assertIn("recipes.current_version_id IS NOT NULL", compiled_sql)
 
 
+class BuildRecipeDetailQueryTests(unittest.TestCase):
+    def test_query_filters_to_public_published_recipe_with_version(self) -> None:
+        recipe_id = UUID("44444444-4444-4444-4444-444444444444")
+
+        statement = build_recipe_detail_query(recipe_id)
+        compiled_sql = str(
+            statement.compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={"literal_binds": True},
+            )
+        )
+
+        self.assertIn(str(recipe_id), compiled_sql)
+        self.assertIn("recipes.status = 'PUBLISHED'", compiled_sql)
+        self.assertIn("recipes.visibility = 'PUBLIC'", compiled_sql)
+        self.assertIn("recipes.current_version_id IS NOT NULL", compiled_sql)
+
+
 class SerializeCuratedRecipeTests(unittest.TestCase):
     def test_serialize_uses_database_fallbacks(self) -> None:
         recipe = make_recipe()
@@ -116,6 +137,22 @@ class SerializeCuratedRecipeTests(unittest.TestCase):
         self.assertEqual(
             payload.image_url,
             "/api/recipes/images/recipe-box/fn/5l1yTSYFifFM2dfbD6DX28WWQpLWNK.jpg",
+        )
+
+    def test_serialize_recipe_detail_includes_ingredients_and_instructions(self) -> None:
+        recipe = make_recipe(title="Pan Sauce Chicken")
+        version = make_version(recipe.id)
+
+        payload = serialize_recipe_detail(recipe, version)
+
+        self.assertEqual(payload.title, "Pan Sauce Chicken")
+        self.assertEqual(payload.ingredients, ["2 onions", "butter", "flour"])
+        self.assertEqual(
+            payload.instructions,
+            [
+                "Roast the onions until they turn jammy and sweet.",
+                "Bake the tart shell until golden.",
+            ],
         )
 
 
@@ -204,6 +241,52 @@ class ListCuratedRecipesRouteTests(unittest.TestCase):
         self.assertIn("LIMIT 3", compiled_sql)
         self.assertIn(str(excluded_ids[0]), compiled_sql)
         self.assertIn(str(excluded_ids[1]), compiled_sql)
+
+
+class GetRecipeDetailRouteTests(unittest.TestCase):
+    def test_route_returns_serialized_recipe_detail(self) -> None:
+        recipe = make_recipe(title="Weeknight Tomato Pasta")
+        version = make_version(recipe.id)
+
+        class FakeResult:
+            def one_or_none(self):
+                return (recipe, version)
+
+        class FakeSession:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, traceback) -> bool:
+                return False
+
+            def execute(self, statement):
+                return FakeResult()
+
+        with patch("apps.api.src.api.routes.recipes.SessionLocal", return_value=FakeSession()):
+            response = get_recipe_detail(recipe.id)
+
+        self.assertEqual(response.title, "Weeknight Tomato Pasta")
+        self.assertEqual(response.ingredients, ["2 onions", "butter", "flour"])
+        self.assertEqual(len(response.instructions), 2)
+
+    def test_route_returns_404_for_missing_recipe(self) -> None:
+        class FakeResult:
+            def one_or_none(self):
+                return None
+
+        class FakeSession:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, traceback) -> bool:
+                return False
+
+            def execute(self, statement):
+                return FakeResult()
+
+        with patch("apps.api.src.api.routes.recipes.SessionLocal", return_value=FakeSession()):
+            with self.assertRaises(HTTPException):
+                get_recipe_detail(uuid4())
 
 
 if __name__ == "__main__":
