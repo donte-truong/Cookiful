@@ -1,4 +1,5 @@
 node_modules
+.codex
 .turbo
 .next
 dist
@@ -14,5 +15,4 @@ __pycache__
 .ruff_cache
 .venv
 
-/.codex
 /packages/recipe-schema/data
