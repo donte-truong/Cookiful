@@ -12,9 +12,11 @@ from apps.api.src.api.routes.me import (
     RecipeSocialActionRequest,
     build_action_state,
     build_profile_response,
+    build_social_action_stat,
     get_current_user_id,
     get_me_profile,
     router,
+    serialize_social_highlight,
     update_recipe_social_action,
 )
 from cookiful_db.models import Recipe, RecipeIngredient, RecipeStatus, RecipeVersion, RecipeVisibility, User, UserProfile, UserRecipeSocialAction, UserStatus
@@ -292,6 +294,33 @@ class MeProfileTests(unittest.TestCase):
         self.assertEqual(len(response.liked_recipes), 1)
         self.assertEqual(response.liked_recipes[0].title, "Tomato Toast")
         self.assertEqual(response.grocery_items, [])
+
+
+class SocialHighlightsTests(unittest.TestCase):
+    def test_build_social_action_stat_uses_action_copy(self) -> None:
+        self.assertEqual(build_social_action_stat("like", 2), "2 liked this")
+        self.assertEqual(build_social_action_stat("unknown", 1), "1 shared this")
+
+    def test_serialize_social_highlight_uses_profile_and_recipe(self) -> None:
+        user = make_user()
+        recipe = make_recipe("Tomato Toast")
+        version = make_version(recipe)
+        action = UserRecipeSocialAction(user_id=user.id, recipe_id=recipe.id, action_type="save")
+
+        response = serialize_social_highlight(
+            social_action=action,
+            user=user,
+            profile=user.profile,
+            recipe=recipe,
+            version=version,
+            stat_count=3,
+        )
+
+        self.assertEqual(response.name, "Chef Example")
+        self.assertEqual(response.role, "Cookiful Cook")
+        self.assertEqual(response.title, "Tomato Toast")
+        self.assertEqual(response.stat, "3 saved this")
+        self.assertEqual(response.avatar_letter, "C")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,66 @@
-import { socialStories } from "../home-data";
+import { getRecipesApiBaseUrl } from "../../../app/api/recipes/curated/route-config";
+import { HeartIcon } from "./home-icons";
+import { socialStories, type HomeSocialStory } from "../home-data";
 import { HomeSocialCard } from "./home-social-card";
 
-export function HomeSocialSection() {
+type SocialHighlightApiRecord = {
+  name: string;
+  role: string;
+  title: string;
+  quote: string;
+  stat: string;
+  image_url: string | null;
+  image_alt: string;
+  avatar_url: string | null;
+  avatar_letter: string;
+};
+
+type SocialHighlightsApiResponse = {
+  stories: SocialHighlightApiRecord[];
+};
+
+function toSocialStory(story: SocialHighlightApiRecord, fallback: HomeSocialStory): HomeSocialStory {
+  return {
+    name: story.name,
+    role: story.role,
+    title: story.title,
+    quote: story.quote,
+    stat: story.stat,
+    image: story.image_url || fallback.image,
+    imageAlt: story.image_alt || fallback.imageAlt,
+    badgeIcon: HeartIcon,
+    avatarImage: story.avatar_url || undefined,
+    avatarLetter: story.avatar_letter || story.name.slice(0, 1).toUpperCase(),
+  };
+}
+
+async function fetchSocialStories(): Promise<HomeSocialStory[]> {
+  try {
+    const response = await fetch(`${getRecipesApiBaseUrl()}/me/social-highlights`, {
+      cache: "no-store",
+      headers: {
+        accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      return socialStories;
+    }
+
+    const payload = (await response.json()) as SocialHighlightsApiResponse;
+    if (!payload.stories.length) {
+      return socialStories;
+    }
+
+    return payload.stories.map((story, index) => toSocialStory(story, socialStories[index % socialStories.length]));
+  } catch {
+    return socialStories;
+  }
+}
+
+export async function HomeSocialSection() {
+  const stories = await fetchSocialStories();
+
   return (
     <section className="pb-20 sm:pb-24" id="social-hearth">
       <div className="relative overflow-hidden rounded-[2.25rem] bg-hearth-high px-6 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-14">
@@ -28,8 +87,8 @@ export function HomeSocialSection() {
         </div>
 
         <div className="relative z-10 mt-10 grid gap-6 lg:grid-cols-3">
-          {socialStories.map((story) => (
-            <HomeSocialCard key={story.title} story={story} />
+          {stories.map((story) => (
+            <HomeSocialCard key={`${story.name}-${story.title}-${story.stat}`} story={story} />
           ))}
         </div>
       </div>

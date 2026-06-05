@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import Select, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.orm import selectinload
 
 from apps.api.src.api.routes.auth import decode_access_token
@@ -18,6 +18,7 @@ from cookiful_db.models import (
     RecipeVersion,
     RecipeVisibility,
     User,
+    UserProfile,
     UserRecipeSocialAction,
 )
 
@@ -62,6 +63,21 @@ class MeProfileResponse(BaseModel):
     reposted_recipes: list[CuratedRecipeResponse]
     grocery_items: list[MeProfileGroceryItem]
 
+
+class SocialHighlightResponse(BaseModel):
+    name: str
+    role: str
+    title: str
+    quote: str
+    stat: str
+    image_url: str | None
+    image_alt: str
+    avatar_url: str | None
+    avatar_letter: str
+
+
+class SocialHighlightsResponse(BaseModel):
+    stories: list[SocialHighlightResponse]
 
 
 def unauthorized_error() -> HTTPException:
@@ -162,6 +178,24 @@ def build_profile_grocery_items_query(user_id: UUID) -> Select[tuple[Recipe, Rec
     )
 
 
+def build_social_highlights_query(
+    limit: int,
+) -> Select[tuple[UserRecipeSocialAction, User, UserProfile | None, Recipe, RecipeVersion | None]]:
+    return (
+        select(UserRecipeSocialAction, User, UserProfile, Recipe, RecipeVersion)
+        .join(User, User.id == UserRecipeSocialAction.user_id)
+        .outerjoin(UserProfile, UserProfile.user_id == User.id)
+        .join(Recipe, Recipe.id == UserRecipeSocialAction.recipe_id)
+        .outerjoin(RecipeVersion, RecipeVersion.id == Recipe.current_version_id)
+        .where(
+            Recipe.status == RecipeStatus.PUBLISHED,
+            Recipe.visibility == RecipeVisibility.PUBLIC,
+            Recipe.current_version_id.is_not(None),
+        )
+        .order_by(UserRecipeSocialAction.created_at.desc())
+        .limit(limit)
+    )
+
 
 def build_action_state(recipe_id: UUID, action_types: list[str]) -> RecipeSocialActionState:
     action_type_set = set(action_types)
@@ -226,6 +260,49 @@ def build_profile_response(
     )
 
 
+def build_social_action_stat(action_type: str, count: int) -> str:
+    action_labels = {
+        "like": "liked",
+        "save": "saved",
+        "repost": "reposted",
+    }
+    label = action_labels.get(action_type, "shared")
+    return f"{count} {label} this"
+
+
+def build_social_highlight_quote(action_type: str, recipe: Recipe) -> str:
+    action_copy = {
+        "like": "This one earned a place at the top of my repeat list.",
+        "save": "Saving this for the next quiet night in the kitchen.",
+        "repost": "Passing this along because the table needs it.",
+    }
+    copy = action_copy.get(action_type, "A Cookiful recipe worth sharing.")
+    return f'"{copy}"'
+
+
+def serialize_social_highlight(
+    social_action: UserRecipeSocialAction,
+    user: User,
+    profile: UserProfile | None,
+    recipe: Recipe,
+    version: RecipeVersion | None,
+    stat_count: int,
+) -> SocialHighlightResponse:
+    display_name = profile.display_name if profile is not None and profile.display_name else user.username
+    role = profile.skill_level if profile is not None and profile.skill_level else "Cookiful cook"
+    curated_recipe = serialize_curated_recipe(recipe, version)
+    return SocialHighlightResponse(
+        name=display_name,
+        role=role.title(),
+        title=recipe.title,
+        quote=build_social_highlight_quote(social_action.action_type, recipe),
+        stat=build_social_action_stat(social_action.action_type, stat_count),
+        image_url=curated_recipe.image_url,
+        image_alt=curated_recipe.image_alt,
+        avatar_url=profile.avatar_url if profile is not None else None,
+        avatar_letter=display_name[:1].upper() or "C",
+    )
+
 
 @router.put("/recipe-actions", response_model=RecipeSocialActionState)
 def update_recipe_social_action(
@@ -269,3 +346,29 @@ def get_me_profile(user_id: Annotated[UUID, Depends(get_current_user_id)]) -> Me
         grocery_rows = session.execute(build_profile_grocery_items_query(user_id)).all()
 
     return build_profile_response(user, list(rows), list(grocery_rows))
+
+
+@router.get("/social-highlights", response_model=SocialHighlightsResponse)
+def get_social_highlights() -> SocialHighlightsResponse:
+    with SessionLocal() as session:
+        rows = session.execute(build_social_highlights_query(limit=3)).all()
+        stories = []
+        for social_action, user, profile, recipe, version in rows:
+            stat_count = session.execute(
+                select(func.count(UserRecipeSocialAction.id)).where(
+                    UserRecipeSocialAction.recipe_id == recipe.id,
+                    UserRecipeSocialAction.action_type == social_action.action_type,
+                )
+            ).scalar_one()
+            stories.append(
+                serialize_social_highlight(
+                    social_action=social_action,
+                    user=user,
+                    profile=profile,
+                    recipe=recipe,
+                    version=version,
+                    stat_count=stat_count,
+                )
+            )
+
+    return SocialHighlightsResponse(stories=stories)
