@@ -63,7 +63,7 @@ services:
       api:
         condition: service_started
     environment:
-      NEXT_PUBLIC_API_URL: http://api:4000/api
+      COOKIFUL_API_URL: http://api:4000/api
     ports:
       - "3000:3000"
     volumes:

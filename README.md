@@ -110,6 +110,15 @@ The seed users all use the same local password: `cookiful-demo`.
 | `sol@cookiful.app` | Sol Rivera |
 | `nora@cookiful.app` | Nora Bell |
 
+## Deployment
+
+Cookiful is scaffolded for a split deployment:
+
+- GitHub Pages serves the static Next.js web export from `.github/workflows/deploy-web-pages.yml`.
+- Render runs the FastAPI Docker service, managed Postgres, and Render Key Value from `render.yaml`.
+
+See [Render and GitHub Pages Deployment](./docs/deployment/render-and-github-pages.md) for the required URLs, Render environment variables, and the remaining Next.js static-export blockers.
+
 ## Local Development Without Docker
 
 Install workspace dependencies:

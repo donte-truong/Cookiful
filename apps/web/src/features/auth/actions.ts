@@ -27,7 +27,9 @@ type BackendAuthResponse = {
 type AuthEndpoint = "/auth/login" | "/auth/register";
 
 function buildAuthApiUrl(endpoint: AuthEndpoint): string {
-  const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  const configuredApiUrl =
+    process.env.COOKIFUL_API_URL?.trim() ||
+    process.env.NEXT_PUBLIC_API_URL?.trim();
   const apiBaseUrl = configuredApiUrl
     ? configuredApiUrl
     : process.env.NODE_ENV !== "production"
@@ -35,7 +37,9 @@ function buildAuthApiUrl(endpoint: AuthEndpoint): string {
       : "";
 
   if (!apiBaseUrl) {
-    throw new Error("NEXT_PUBLIC_API_URL must be configured for authentication.");
+    throw new Error(
+      "COOKIFUL_API_URL or NEXT_PUBLIC_API_URL must be configured for authentication.",
+    );
   }
 
   return `${apiBaseUrl.replace(/\/$/, "")}${endpoint}`;

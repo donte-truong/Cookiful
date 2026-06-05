@@ -19,4 +19,4 @@ COPY . .
 
 EXPOSE 4000
 
-CMD ["python", "-m", "uvicorn", "apps.api.src.main:app", "--reload", "--host", "0.0.0.0", "--port", "4000"]
+CMD ["sh", "-c", "python -m uvicorn apps.api.src.main:app --host 0.0.0.0 --port ${PORT:-4000}"]

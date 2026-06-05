@@ -7,6 +7,8 @@ export const HOME_CURATED_RECIPE_LIMIT = 4;
 export const HOME_HERO_QUICK_ACTION_RECIPE_LIMIT = 3;
 export const HOME_RECIPE_SEARCH_LIMIT = 5;
 
+const API_ROUTE_BASE_PATH = "/api";
+
 export type CuratedRecipeApiRecord = {
   id: string;
   title: string;
@@ -39,6 +41,19 @@ type FetchRecipeSearchOptions = {
 
 type RecipeIdOnly = Pick<HomeRecipe, "id">;
 
+export function buildClientApiUrl(
+  path: string,
+  apiBaseUrl = process.env.NEXT_PUBLIC_API_URL,
+): string {
+  const normalizedApiBaseUrl = apiBaseUrl?.trim().replace(/\/$/, "");
+
+  if (!normalizedApiBaseUrl) {
+    return `${API_ROUTE_BASE_PATH}${path}`;
+  }
+
+  return `${normalizedApiBaseUrl}${path}`;
+}
+
 export function buildCuratedRecipesUrl({
   excludeIds = [],
   limit = HOME_CURATED_RECIPE_LIMIT,
@@ -49,7 +64,7 @@ export function buildCuratedRecipesUrl({
     params.append("exclude_id", recipeId);
   }
 
-  return `/api/recipes/curated?${params.toString()}`;
+  return buildClientApiUrl(`/recipes/curated?${params.toString()}`);
 }
 
 export function buildRecipeSearchUrl({
@@ -61,7 +76,7 @@ export function buildRecipeSearchUrl({
     q: query,
   });
 
-  return `/api/recipes/search?${params.toString()}`;
+  return buildClientApiUrl(`/recipes/search?${params.toString()}`);
 }
 
 export function buildPantryMatchesUrl({
@@ -69,7 +84,7 @@ export function buildPantryMatchesUrl({
 }: FetchHeroQuickActionRecipesOptions = {}): string {
   const params = new URLSearchParams({ limit: String(limit) });
 
-  return `/api/recipes/pantry-matches?${params.toString()}`;
+  return buildClientApiUrl(`/recipes/pantry-matches?${params.toString()}`);
 }
 
 export function buildQuickDinnerUrl({
@@ -77,7 +92,7 @@ export function buildQuickDinnerUrl({
 }: FetchHeroQuickActionRecipesOptions = {}): string {
   const params = new URLSearchParams({ limit: String(limit) });
 
-  return `/api/recipes/quick-dinner?${params.toString()}`;
+  return buildClientApiUrl(`/recipes/quick-dinner?${params.toString()}`);
 }
 
 export function toHomeRecipe(recipe: CuratedRecipeApiRecord): HomeRecipe {

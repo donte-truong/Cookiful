@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  buildClientApiUrl,
   buildPantryMatchesUrl,
   buildNextCuratedRecipesPageParam,
   buildCuratedRecipesUrl,
@@ -14,6 +15,20 @@ import {
   mergeExcludedRecipeIds,
   toHomeRecipe,
 } from "./recipes-client";
+
+describe("buildClientApiUrl", () => {
+  it("falls back to the local Next API route namespace", () => {
+    expect(buildClientApiUrl("/recipes/curated", undefined)).toBe(
+      "/api/recipes/curated",
+    );
+  });
+
+  it("uses an absolute API URL when the static site is configured for Render", () => {
+    expect(
+      buildClientApiUrl("/recipes/curated", "https://cookiful-api.onrender.com/api/"),
+    ).toBe("https://cookiful-api.onrender.com/api/recipes/curated");
+  });
+});
 
 describe("buildCuratedRecipesUrl", () => {
   it("includes the limit and excluded recipe ids", () => {

@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: cookiful-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    autoDeployTrigger: commit
+    healthCheckPath: /api/health
+    preDeployCommand: python -m cookiful_db.scripts.apply_migration
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: APP_NAME
+        value: Cookiful API
+      - key: API_PREFIX
+        value: /api
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cookiful-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: cookiful-redis
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+
+  - type: keyvalue
+    name: cookiful-redis
+    ipAllowList: []
+
+databases:
+  - name: cookiful-postgres
+    databaseName: cookiful
+    user: cookiful
+    ipAllowList: []

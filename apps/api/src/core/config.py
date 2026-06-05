@@ -13,9 +13,9 @@ class Settings(BaseSettings):
     redis_url: str
     jwt_access_secret: str
     jwt_refresh_secret: str
+    cors_origins: str = ""
 
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()
-
