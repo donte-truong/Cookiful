@@ -4,6 +4,7 @@ import { formatRecipeDurationLabel } from "../recipes/recipe-formatters";
 export { formatRecipeDurationLabel };
 
 export const HOME_CURATED_RECIPE_LIMIT = 4;
+export const HOME_RECIPE_SEARCH_LIMIT = 5;
 
 export type CuratedRecipeApiRecord = {
   id: string;
@@ -26,6 +27,11 @@ type FetchCuratedRecipesOptions = {
   limit?: number;
 };
 
+type FetchRecipeSearchOptions = {
+  limit?: number;
+  query: string;
+};
+
 type RecipeIdOnly = Pick<HomeRecipe, "id">;
 
 export function buildCuratedRecipesUrl({
@@ -39,6 +45,18 @@ export function buildCuratedRecipesUrl({
   }
 
   return `/api/recipes/curated?${params.toString()}`;
+}
+
+export function buildRecipeSearchUrl({
+  limit = HOME_RECIPE_SEARCH_LIMIT,
+  query,
+}: FetchRecipeSearchOptions): string {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    q: query,
+  });
+
+  return `/api/recipes/search?${params.toString()}`;
 }
 
 export function toHomeRecipe(recipe: CuratedRecipeApiRecord): HomeRecipe {
@@ -93,6 +111,21 @@ export async function fetchCuratedRecipes(
 
   if (!response.ok) {
     throw new Error("Unable to load curated recipes.");
+  }
+
+  const payload = (await response.json()) as CuratedRecipesApiResponse;
+  return payload.recipes.map(toHomeRecipe);
+}
+
+export async function fetchRecipeSearch(
+  options: FetchRecipeSearchOptions,
+): Promise<HomeRecipe[]> {
+  const response = await fetch(buildRecipeSearchUrl(options), {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to search recipes.");
   }
 
   const payload = (await response.json()) as CuratedRecipesApiResponse;

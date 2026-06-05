@@ -3,7 +3,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildNextCuratedRecipesPageParam,
   buildCuratedRecipesUrl,
+  buildRecipeSearchUrl,
   fetchCuratedRecipes,
+  fetchRecipeSearch,
   flattenCuratedRecipePages,
   mergeExcludedRecipeIds,
   toHomeRecipe,
@@ -17,6 +19,14 @@ describe("buildCuratedRecipesUrl", () => {
         excludeIds: ["recipe-1", "recipe-2"],
       }),
     ).toBe("/api/recipes/curated?limit=3&exclude_id=recipe-1&exclude_id=recipe-2");
+  });
+});
+
+describe("buildRecipeSearchUrl", () => {
+  it("includes the search query and result limit", () => {
+    expect(buildRecipeSearchUrl({ query: "green beans", limit: 4 })).toBe(
+      "/api/recipes/search?limit=4&q=green+beans",
+    );
   });
 });
 
@@ -114,6 +124,72 @@ describe("fetchCuratedRecipes", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(fetchCuratedRecipes()).rejects.toThrow("Unable to load curated recipes.");
+  });
+});
+
+describe("fetchRecipeSearch", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("loads recipes from the search API route", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          recipes: [
+            {
+              id: "recipe-11",
+              title: "Lemon Chickpea Soup",
+              description: "A bright soup with chickpeas and herbs.",
+              duration_minutes: 35,
+              tag: "SOUP",
+              image_url: null,
+              image_alt: "Editorial plating for Lemon Chickpea Soup.",
+              source_name: "Cookiful Archive",
+              source_url: "https://example.com/recipe-11",
+            },
+          ],
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        },
+      ),
+    );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchRecipeSearch({ query: "lemon", limit: 2 })).resolves.toEqual([
+      {
+        id: "recipe-11",
+        title: "Lemon Chickpea Soup",
+        description: "A bright soup with chickpeas and herbs.",
+        duration: "35 MIN",
+        tag: "SOUP",
+        image: null,
+        alt: "Editorial plating for Lemon Chickpea Soup.",
+        sourceName: "Cookiful Archive",
+        sourceUrl: "https://example.com/recipe-11",
+      },
+    ]);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/recipes/search?limit=2&q=lemon",
+      { cache: "no-store" },
+    );
+  });
+
+  it("throws a helpful error when recipe search fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("{}", { status: 500 }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchRecipeSearch({ query: "cake" })).rejects.toThrow(
+      "Unable to search recipes.",
+    );
   });
 });
 

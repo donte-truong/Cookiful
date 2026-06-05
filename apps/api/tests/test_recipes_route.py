@@ -11,9 +11,11 @@ from apps.api.src.api.routes.recipes import (
     build_recipe_box_public_image_url,
     build_curated_recipes_query,
     build_recipe_detail_query,
+    build_recipe_search_query,
     get_recipe_detail,
     get_recipe_box_image,
     list_curated_recipes,
+    search_recipes,
     serialize_curated_recipe,
     serialize_recipe_detail,
 )
@@ -92,6 +94,24 @@ class BuildRecipeDetailQueryTests(unittest.TestCase):
         self.assertIn("recipes.status = 'PUBLISHED'", compiled_sql)
         self.assertIn("recipes.visibility = 'PUBLIC'", compiled_sql)
         self.assertIn("recipes.current_version_id IS NOT NULL", compiled_sql)
+
+
+class BuildRecipeSearchQueryTests(unittest.TestCase):
+    def test_query_filters_public_published_titles_and_limits_results(self) -> None:
+        statement = build_recipe_search_query("tomato", 5)
+        compiled_sql = str(
+            statement.compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={"literal_binds": True},
+            )
+        )
+
+        self.assertIn("recipes.status = 'PUBLISHED'", compiled_sql)
+        self.assertIn("recipes.visibility = 'PUBLIC'", compiled_sql)
+        self.assertIn("recipes.current_version_id IS NOT NULL", compiled_sql)
+        self.assertIn("recipes.title ILIKE '%%tomato%%'", compiled_sql)
+        self.assertIn("ORDER BY recipes.title ASC", compiled_sql)
+        self.assertIn("LIMIT 5", compiled_sql)
 
 
 class SerializeCuratedRecipeTests(unittest.TestCase):
@@ -241,6 +261,52 @@ class ListCuratedRecipesRouteTests(unittest.TestCase):
         self.assertIn("LIMIT 3", compiled_sql)
         self.assertIn(str(excluded_ids[0]), compiled_sql)
         self.assertIn(str(excluded_ids[1]), compiled_sql)
+
+
+class SearchRecipesRouteTests(unittest.TestCase):
+    def test_route_returns_title_matches_from_session_rows(self) -> None:
+        recipe = make_recipe(title="Weeknight Tomato Pasta")
+        version = make_version(recipe.id)
+
+        class FakeResult:
+            def all(self):
+                return [(recipe, version)]
+
+        class FakeSession:
+            def __init__(self) -> None:
+                self.executed_statement = None
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, traceback) -> bool:
+                return False
+
+            def execute(self, statement):
+                self.executed_statement = statement
+                return FakeResult()
+
+        fake_session = FakeSession()
+
+        with patch("apps.api.src.api.routes.recipes.SessionLocal", return_value=fake_session):
+            response = search_recipes(q=" tomato ", limit=3)
+
+        self.assertEqual(len(response.recipes), 1)
+        self.assertEqual(response.recipes[0].title, "Weeknight Tomato Pasta")
+
+        compiled_sql = str(
+            fake_session.executed_statement.compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={"literal_binds": True},
+            )
+        )
+        self.assertIn("%%tomato%%", compiled_sql)
+        self.assertIn("LIMIT 3", compiled_sql)
+
+    def test_route_returns_empty_results_for_blank_query(self) -> None:
+        response = search_recipes(q=" ", limit=3)
+
+        self.assertEqual(response.recipes, [])
 
 
 class GetRecipeDetailRouteTests(unittest.TestCase):

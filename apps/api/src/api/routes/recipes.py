@@ -139,6 +139,21 @@ def build_recipe_detail_query(recipe_id: UUID) -> Select[tuple[Recipe, RecipeVer
     )
 
 
+def build_recipe_search_query(query: str, limit: int) -> Select[tuple[Recipe, RecipeVersion | None]]:
+    return (
+        select(Recipe, RecipeVersion)
+        .outerjoin(RecipeVersion, RecipeVersion.id == Recipe.current_version_id)
+        .where(
+            Recipe.status == RecipeStatus.PUBLISHED,
+            Recipe.visibility == RecipeVisibility.PUBLIC,
+            Recipe.current_version_id.is_not(None),
+            Recipe.title.ilike(f"%{query}%"),
+        )
+        .order_by(Recipe.title.asc())
+        .limit(limit)
+    )
+
+
 def build_recipe_description(recipe: Recipe, version: RecipeVersion | None) -> str:
     description = (recipe.description or "").strip()
     if description:
@@ -242,6 +257,23 @@ def list_curated_recipes(
 
     with SessionLocal() as session:
         rows = session.execute(build_curated_recipes_query(limit=limit, exclude_ids=exclude_ids)).all()
+
+    return CuratedRecipesResponse(
+        recipes=[serialize_curated_recipe(recipe, version) for recipe, version in rows]
+    )
+
+
+@router.get("/search", response_model=CuratedRecipesResponse)
+def search_recipes(
+    q: Annotated[str, Query(min_length=1, max_length=120)],
+    limit: Annotated[int, Query(ge=1, le=6)] = 5,
+) -> CuratedRecipesResponse:
+    query = q.strip()
+    if not query:
+        return CuratedRecipesResponse(recipes=[])
+
+    with SessionLocal() as session:
+        rows = session.execute(build_recipe_search_query(query=query, limit=limit)).all()
 
     return CuratedRecipesResponse(
         recipes=[serialize_curated_recipe(recipe, version) for recipe, version in rows]
