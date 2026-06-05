@@ -82,6 +82,7 @@ class User(Base):
     cooking_sessions: Mapped[list["CookingSession"]] = relationship(back_populates="user")
     ai_interactions: Mapped[list["AiInteraction"]] = relationship(back_populates="user")
     recipe_social_actions: Mapped[list["UserRecipeSocialAction"]] = relationship(back_populates="user")
+    pantry_items: Mapped[list["UserPantryItem"]] = relationship(back_populates="user")
 
 
 class UserProfile(Base):
@@ -161,6 +162,22 @@ class UserRecipeSocialAction(Base):
 
     user: Mapped["User"] = relationship(back_populates="recipe_social_actions")
     recipe: Mapped["Recipe"] = relationship(back_populates="social_actions")
+
+
+class UserPantryItem(Base):
+    __tablename__ = "user_pantry_items"
+    __table_args__ = (
+        UniqueConstraint("user_id", "normalized_name", name="uq_user_pantry_items_user_normalized_name"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    ingredient_name: Mapped[str] = mapped_column(Text, nullable=False)
+    normalized_name: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = created_at_column()
+    updated_at: Mapped[datetime] = updated_at_column()
+
+    user: Mapped["User"] = relationship(back_populates="pantry_items")
 
 
 class RecipeVersion(Base):

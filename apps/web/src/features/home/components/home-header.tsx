@@ -33,13 +33,13 @@ export function HomeHeader() {
         </nav>
 
         <div className="flex items-center gap-2 text-hearth-copper sm:gap-4">
-          <button
-            aria-label="Shopping bag"
+          <Link
+            aria-label="Groceries"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/70"
-            type="button"
+            href="/groceries"
           >
             <ShoppingBagIcon className="h-[1.125rem] w-[1.125rem]" />
-          </button>
+          </Link>
           <Link
             aria-label="Profile"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/70"

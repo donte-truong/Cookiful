@@ -1,10 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  buildPantryMatchesUrl,
   buildNextCuratedRecipesPageParam,
   buildCuratedRecipesUrl,
+  buildQuickDinnerUrl,
   buildRecipeSearchUrl,
   fetchCuratedRecipes,
+  fetchPantryMatchRecipes,
+  fetchQuickDinnerRecipes,
   fetchRecipeSearch,
   flattenCuratedRecipePages,
   mergeExcludedRecipeIds,
@@ -26,6 +30,22 @@ describe("buildRecipeSearchUrl", () => {
   it("includes the search query and result limit", () => {
     expect(buildRecipeSearchUrl({ query: "green beans", limit: 4 })).toBe(
       "/api/recipes/search?limit=4&q=green+beans",
+    );
+  });
+});
+
+describe("buildPantryMatchesUrl", () => {
+  it("includes the pantry match result limit", () => {
+    expect(buildPantryMatchesUrl({ limit: 3 })).toBe(
+      "/api/recipes/pantry-matches?limit=3",
+    );
+  });
+});
+
+describe("buildQuickDinnerUrl", () => {
+  it("includes the quick dinner result limit", () => {
+    expect(buildQuickDinnerUrl({ limit: 3 })).toBe(
+      "/api/recipes/quick-dinner?limit=3",
     );
   });
 });
@@ -189,6 +209,138 @@ describe("fetchRecipeSearch", () => {
 
     await expect(fetchRecipeSearch({ query: "cake" })).rejects.toThrow(
       "Unable to search recipes.",
+    );
+  });
+});
+
+describe("fetchPantryMatchRecipes", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("loads recipes from the pantry matches API route", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          recipes: [
+            {
+              id: "recipe-12",
+              title: "Pantry Chickpea Bowl",
+              description: "A quick bowl built from shelf-stable staples.",
+              duration_minutes: 22,
+              tag: "PANTRY",
+              image_url: null,
+              image_alt: "Editorial plating for Pantry Chickpea Bowl.",
+              source_name: "Cookiful Archive",
+              source_url: "https://example.com/recipe-12",
+            },
+          ],
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        },
+      ),
+    );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchPantryMatchRecipes({ limit: 3 })).resolves.toEqual([
+      {
+        id: "recipe-12",
+        title: "Pantry Chickpea Bowl",
+        description: "A quick bowl built from shelf-stable staples.",
+        duration: "22 MIN",
+        tag: "PANTRY",
+        image: null,
+        alt: "Editorial plating for Pantry Chickpea Bowl.",
+        sourceName: "Cookiful Archive",
+        sourceUrl: "https://example.com/recipe-12",
+      },
+    ]);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/recipes/pantry-matches?limit=3",
+      { cache: "no-store" },
+    );
+  });
+
+  it("throws a helpful error when pantry matches fail", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("{}", { status: 500 }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchPantryMatchRecipes()).rejects.toThrow(
+      "Unable to load pantry matches.",
+    );
+  });
+});
+
+describe("fetchQuickDinnerRecipes", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("loads recipes from the quick dinner API route", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          recipes: [
+            {
+              id: "recipe-13",
+              title: "Speedy Sesame Noodles",
+              description: "Noodles tossed with sesame sauce and crisp vegetables.",
+              duration_minutes: 15,
+              tag: "DINNER",
+              image_url: "https://example.com/noodles.jpg",
+              image_alt: "Editorial plating for Speedy Sesame Noodles.",
+              source_name: "Cookiful Archive",
+              source_url: "https://example.com/recipe-13",
+            },
+          ],
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        },
+      ),
+    );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchQuickDinnerRecipes({ limit: 3 })).resolves.toEqual([
+      {
+        id: "recipe-13",
+        title: "Speedy Sesame Noodles",
+        description: "Noodles tossed with sesame sauce and crisp vegetables.",
+        duration: "15 MIN",
+        tag: "DINNER",
+        image: "https://example.com/noodles.jpg",
+        alt: "Editorial plating for Speedy Sesame Noodles.",
+        sourceName: "Cookiful Archive",
+        sourceUrl: "https://example.com/recipe-13",
+      },
+    ]);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/recipes/quick-dinner?limit=3",
+      { cache: "no-store" },
+    );
+  });
+
+  it("throws a helpful error when quick dinner recipes fail", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("{}", { status: 500 }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchQuickDinnerRecipes()).rejects.toThrow(
+      "Unable to load quick dinner recipes.",
     );
   });
 });

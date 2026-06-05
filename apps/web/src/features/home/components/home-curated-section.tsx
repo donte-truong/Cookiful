@@ -160,7 +160,10 @@ export function HomeCuratedSection() {
         </div>
 
         <div className="lg:col-span-4 lg:sticky lg:top-28">
-          <HomeEditorialCard />
+          <HomeEditorialCard
+            isLoading={isInitialLoad}
+            recipes={curatedRecipes.slice(0, 3)}
+          />
         </div>
       </div>
     </section>

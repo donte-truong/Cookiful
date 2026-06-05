@@ -6,33 +6,95 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { homeQuickActions } from "../home-data";
 import type { HomeRecipe } from "../home-data";
-import { fetchRecipeSearch, HOME_RECIPE_SEARCH_LIMIT } from "../recipes-client";
+import {
+  fetchPantryMatchRecipes,
+  fetchQuickDinnerRecipes,
+  fetchRecipeSearch,
+  HOME_HERO_QUICK_ACTION_RECIPE_LIMIT,
+  HOME_RECIPE_SEARCH_LIMIT,
+} from "../recipes-client";
 import { SearchAccentIcon } from "./home-icons";
 
-type RecipeSearchState = "idle" | "loading" | "success" | "empty" | "error";
+type RecipeResultState = "idle" | "loading" | "success" | "empty" | "error";
+type QuickActionRecipeSource = "pantryMatches" | "quickDinner";
+type RecipeResultSource = "search" | QuickActionRecipeSource;
+
+const quickActionResultSources = {
+  "Use what I have": "pantryMatches",
+  "Quick dinner": "quickDinner",
+} as const;
+
+const recipeResultCopy: Record<
+  RecipeResultSource,
+  {
+    empty: string;
+    error: string;
+    loading: string;
+  }
+> = {
+  search: {
+    empty: "No matching recipes yet.",
+    error: "Recipe search is taking a breather. Try again in a moment.",
+    loading: "Searching recipes...",
+  },
+  pantryMatches: {
+    empty: "No pantry matches yet.",
+    error: "Pantry matches are taking a breather. Try again in a moment.",
+    loading: "Finding pantry matches...",
+  },
+  quickDinner: {
+    empty: "No quick dinners yet.",
+    error: "Quick dinner ideas are taking a breather. Try again in a moment.",
+    loading: "Finding quick dinners...",
+  },
+};
+
+function getQuickActionRecipeSource(label: string): QuickActionRecipeSource | null {
+  if (label in quickActionResultSources) {
+    return quickActionResultSources[
+      label as keyof typeof quickActionResultSources
+    ];
+  }
+
+  return null;
+}
+
+function fetchQuickActionRecipes(
+  source: QuickActionRecipeSource,
+): Promise<HomeRecipe[]> {
+  const options = { limit: HOME_HERO_QUICK_ACTION_RECIPE_LIMIT };
+
+  if (source === "pantryMatches") {
+    return fetchPantryMatchRecipes(options);
+  }
+
+  return fetchQuickDinnerRecipes(options);
+}
 
 export function HomeHeroSection() {
   const [query, setQuery] = useState("");
-  const [searchState, setSearchState] = useState<RecipeSearchState>("idle");
-  const [searchResults, setSearchResults] = useState<HomeRecipe[]>([]);
-  const [errorMessage, setErrorMessage] = useState("");
-  const latestSearchIdRef = useRef(0);
+  const [recipeResultSource, setRecipeResultSource] =
+    useState<RecipeResultSource>("search");
+  const [recipeResultState, setRecipeResultState] =
+    useState<RecipeResultState>("idle");
+  const [recipeResults, setRecipeResults] = useState<HomeRecipe[]>([]);
+  const latestRecipeRequestIdRef = useRef(0);
 
   const performSearch = useCallback(async (rawQuery: string, isSubmitted = false) => {
     const nextQuery = rawQuery.trim();
 
     if (!nextQuery || (!isSubmitted && nextQuery.length < 2)) {
-      latestSearchIdRef.current += 1;
-      setSearchResults([]);
-      setErrorMessage("");
-      setSearchState("idle");
+      latestRecipeRequestIdRef.current += 1;
+      setRecipeResultSource("search");
+      setRecipeResults([]);
+      setRecipeResultState("idle");
       return;
     }
 
-    const searchId = latestSearchIdRef.current + 1;
-    latestSearchIdRef.current = searchId;
-    setSearchState("loading");
-    setErrorMessage("");
+    const requestId = latestRecipeRequestIdRef.current + 1;
+    latestRecipeRequestIdRef.current = requestId;
+    setRecipeResultSource("search");
+    setRecipeResultState("loading");
 
     try {
       const recipes = await fetchRecipeSearch({
@@ -40,20 +102,47 @@ export function HomeHeroSection() {
         query: nextQuery,
       });
 
-      if (latestSearchIdRef.current !== searchId) {
+      if (latestRecipeRequestIdRef.current !== requestId) {
         return;
       }
 
-      setSearchResults(recipes);
-      setSearchState(recipes.length > 0 ? "success" : "empty");
+      setRecipeResults(recipes);
+      setRecipeResultState(recipes.length > 0 ? "success" : "empty");
     } catch {
-      if (latestSearchIdRef.current !== searchId) {
+      if (latestRecipeRequestIdRef.current !== requestId) {
         return;
       }
 
-      setSearchResults([]);
-      setErrorMessage("Recipe search is taking a breather. Try again in a moment.");
-      setSearchState("error");
+      setRecipeResults([]);
+      setRecipeResultState("error");
+    }
+  }, []);
+
+  const loadQuickActionRecipes = useCallback(async (source: QuickActionRecipeSource) => {
+    const requestId = latestRecipeRequestIdRef.current + 1;
+    latestRecipeRequestIdRef.current = requestId;
+
+    setQuery("");
+    setRecipeResultSource(source);
+    setRecipeResults([]);
+    setRecipeResultState("loading");
+
+    try {
+      const recipes = await fetchQuickActionRecipes(source);
+
+      if (latestRecipeRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      setRecipeResults(recipes);
+      setRecipeResultState(recipes.length > 0 ? "success" : "empty");
+    } catch {
+      if (latestRecipeRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      setRecipeResults([]);
+      setRecipeResultState("error");
     }
   }, []);
 
@@ -62,13 +151,34 @@ export function HomeHeroSection() {
     void performSearch(query, true);
   }
 
+  function handleQueryChange(nextQuery: string) {
+    setQuery(nextQuery);
+
+    if (recipeResultSource !== "search") {
+      latestRecipeRequestIdRef.current += 1;
+      setRecipeResultSource("search");
+      setRecipeResults([]);
+      setRecipeResultState("idle");
+    }
+  }
+
   useEffect(() => {
+    if (!query.trim()) {
+      if (recipeResultSource === "search") {
+        void performSearch(query);
+      }
+
+      return;
+    }
+
     const searchTimer = window.setTimeout(() => {
       void performSearch(query);
     }, 275);
 
     return () => window.clearTimeout(searchTimer);
-  }, [performSearch, query]);
+  }, [performSearch, query, recipeResultSource]);
+
+  const resultCopy = recipeResultCopy[recipeResultSource];
 
   return (
     <section
@@ -76,7 +186,7 @@ export function HomeHeroSection() {
       id="kitchen-lab"
     >
       <div className="max-w-3xl">
-        <h1 className="font-display text-[clamp(3rem,8vw,5.6rem)] leading-[0.96] tracking-[-0.06em] text-hearth-text">
+        <h1 className="font-display text-5xl leading-[0.96] text-hearth-text sm:text-6xl lg:text-[5.6rem]">
           What would you like to cook today?
         </h1>
       </div>
@@ -88,7 +198,7 @@ export function HomeHeroSection() {
         >
           <input
             className="w-full border-0 bg-transparent pr-12 text-lg text-hearth-text placeholder:text-hearth-outline focus:outline-none focus:ring-0"
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => handleQueryChange(event.target.value)}
             placeholder="Search recipe titles..."
             type="text"
             value={query}
@@ -102,32 +212,32 @@ export function HomeHeroSection() {
           </button>
         </form>
 
-        {searchState !== "idle" ? (
+        {recipeResultState !== "idle" ? (
           <div
             aria-live="polite"
             className="mt-3 min-h-[7.5rem] overflow-hidden rounded-[1.15rem] bg-hearth-paper/80 px-4 py-3 text-left shadow-hearth"
           >
-            {searchState === "loading" ? (
+            {recipeResultState === "loading" ? (
               <p className="px-2 py-7 text-center text-sm font-medium text-hearth-muted">
-                Searching recipes...
+                {resultCopy.loading}
               </p>
             ) : null}
 
-            {searchState === "error" ? (
+            {recipeResultState === "error" ? (
               <p className="px-2 py-7 text-center text-sm font-medium text-hearth-muted">
-                {errorMessage}
+                {resultCopy.error}
               </p>
             ) : null}
 
-            {searchState === "empty" ? (
+            {recipeResultState === "empty" ? (
               <p className="px-2 py-7 text-center text-sm font-medium text-hearth-muted">
-                No matching recipes yet.
+                {resultCopy.empty}
               </p>
             ) : null}
 
-            {searchState === "success" ? (
+            {recipeResultState === "success" ? (
               <div className="grid gap-2">
-                {searchResults.map((recipe) => (
+                {recipeResults.map((recipe) => (
                   <Link
                     className="group flex items-center justify-between gap-4 rounded-[0.85rem] px-3 py-2.5 transition hover:bg-hearth-container/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-hearth-copper/50"
                     href={`/recipes/${recipe.id}`}
@@ -155,11 +265,37 @@ export function HomeHeroSection() {
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         {homeQuickActions.map((action) => {
           const Icon = action.icon;
+          const quickActionSource = getQuickActionRecipeSource(action.label);
+          const quickActionClassName =
+            "inline-flex items-center gap-2 rounded-full bg-hearth-paper px-4 py-2.5 text-sm font-medium text-hearth-accent shadow-hearth transition duration-300 hover:-translate-y-0.5 hover:text-hearth-copper focus:outline-none focus-visible:ring-2 focus-visible:ring-hearth-copper/50";
+
+          if (quickActionSource) {
+            const isActive =
+              recipeResultSource === quickActionSource &&
+              recipeResultState !== "idle";
+
+            return (
+              <button
+                aria-pressed={isActive}
+                className={`${quickActionClassName} ${
+                  isActive ? "bg-hearth-high text-hearth-copper" : ""
+                }`}
+                key={action.label}
+                onClick={() => {
+                  void loadQuickActionRecipes(quickActionSource);
+                }}
+                type="button"
+              >
+                <Icon className="h-4 w-4" />
+                <span>{action.label}</span>
+              </button>
+            );
+          }
 
           return (
             <a
               key={action.label}
-              className="inline-flex items-center gap-2 rounded-full bg-hearth-paper px-4 py-2.5 text-sm font-medium text-hearth-accent shadow-hearth transition duration-300 hover:-translate-y-0.5 hover:text-hearth-copper"
+              className={quickActionClassName}
               href={action.href}
             >
               <Icon className="h-4 w-4" />

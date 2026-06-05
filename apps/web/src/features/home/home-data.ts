@@ -30,12 +30,6 @@ export type HomeRecipe = {
   sourceUrl?: string | null;
 };
 
-export type HomeEditorialMoment = {
-  title: string;
-  description: string;
-  icon: typeof SparkIcon;
-};
-
 export type HomeSocialStory = {
   name: string;
   role: string;
@@ -69,24 +63,6 @@ export const homeQuickActions: HomeQuickAction[] = [
   { href: "#curated-feed", label: "Use what I have", icon: PantryIcon },
   { href: "#curated-feed", label: "Meal prep for week", icon: CalendarIcon },
   { href: "#curated-feed", label: "Quick dinner", icon: TimerIcon }
-];
-
-export const editorialMoments: HomeEditorialMoment[] = [
-  {
-    title: "The Tuesday Braise",
-    description: "Red Wine Slow-Roasted Chicken using your Cabernet remnants.",
-    icon: SparkIcon
-  },
-  {
-    title: "Wednesday Bistro Night",
-    description: "Confit Duck Legs with the rosemary from your garden.",
-    icon: CalendarIcon
-  },
-  {
-    title: "The Thursday Crust",
-    description: "Sourdough Focaccia using the starter we fed yesterday.",
-    icon: PantryIcon
-  }
 ];
 
 export const socialStories: HomeSocialStory[] = [

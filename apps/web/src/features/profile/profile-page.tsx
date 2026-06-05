@@ -5,7 +5,7 @@ import { HomeHeader } from "../home/components/home-header";
 import { BookmarkIcon, HeartIcon, RepostIcon } from "../home/components/home-icons";
 import { HomeRecipeCard } from "../home/components/home-recipe-card";
 import type { HomeRecipe } from "../home/home-data";
-import type { ProfileData, ProfileGroceryItem } from "./profile-data";
+import type { ProfileData } from "./profile-data";
 
 type ProfilePageProps = {
   profile: ProfileData;
@@ -131,73 +131,6 @@ function ProfileRecipeSection({
   );
 }
 
-function GroceryChecklistSection({ items }: { items: ProfileGroceryItem[] }) {
-  return (
-    <section className="py-10">
-      <div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-hearth-outline">
-            Shopping list
-          </p>
-          <h2 className="mt-2 font-display text-[clamp(2rem,4vw,2.8rem)] tracking-[-0.04em] text-hearth-text">
-            Grocery Checklist
-          </h2>
-        </div>
-        <p className="text-sm font-semibold text-hearth-copper">
-          {items.length} {items.length === 1 ? "item" : "items"}
-        </p>
-      </div>
-
-      {items.length > 0 ? (
-        <div className="rounded-[1.8rem] bg-hearth-paper p-4 shadow-hearth sm:p-6">
-          <div className="grid gap-3 md:grid-cols-2">
-            {items.map((item) => {
-              const checkboxId = `grocery-${item.id}`;
-
-              return (
-                <label
-                  className="group flex min-h-20 cursor-pointer items-start gap-3 rounded-[1rem] bg-hearth-surface/70 px-4 py-4 transition hover:bg-hearth-low"
-                  htmlFor={checkboxId}
-                  key={item.id}
-                >
-                  <input
-                    className="peer mt-1 h-5 w-5 shrink-0 accent-hearth-copper"
-                    id={checkboxId}
-                    type="checkbox"
-                  />
-                  <span className="min-w-0 peer-checked:opacity-60 peer-checked:[&_.grocery-item-text]:line-through">
-                    <span className="grocery-item-text block text-sm font-semibold leading-6 text-hearth-text">
-                      {item.text}
-                    </span>
-                    <span className="mt-1 block text-xs font-medium leading-5 text-hearth-muted">
-                      {item.recipeTitle}
-                    </span>
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-[1.8rem] bg-hearth-paper px-6 py-10 shadow-hearth">
-          <p className="font-display text-[1.55rem] tracking-[-0.03em] text-hearth-text">
-            No grocery items yet
-          </p>
-          <p className="mt-3 max-w-[34rem] text-sm leading-7 text-hearth-muted">
-            Ingredients from saved recipes will collect here for your next market run.
-          </p>
-          <Link
-            className="mt-6 inline-flex text-sm font-bold text-hearth-copper transition hover:text-hearth-copperSoft hover:underline"
-            href="/home#curated-feed"
-          >
-            Save recipes to build a list
-          </Link>
-        </div>
-      )}
-    </section>
-  );
-}
-
 export function ProfilePage({ profile }: ProfilePageProps) {
   const displayName = profile.user.displayName || profile.user.username;
 
@@ -241,8 +174,6 @@ export function ProfilePage({ profile }: ProfilePageProps) {
           <ProfileStat Icon={BookmarkIcon} label="Saved" value={profile.savedRecipes.length} />
           <ProfileStat Icon={RepostIcon} label="Reposted" value={profile.repostedRecipes.length} />
         </section>
-
-        <GroceryChecklistSection items={profile.groceryItems} />
 
         {profileSections.map((section) => (
           <ProfileRecipeSection

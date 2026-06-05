@@ -9,17 +9,23 @@ from fastapi.routing import APIRoute
 from apps.api.src.api.router import api_router
 from apps.api.src.api.routes.auth import build_auth_tokens
 from apps.api.src.api.routes.me import (
+    PantryItemRequest,
     RecipeSocialActionRequest,
     build_action_state,
+    build_groceries_response,
     build_profile_response,
     build_social_action_stat,
+    create_me_pantry_item,
+    delete_me_pantry_item,
     get_current_user_id,
+    get_me_groceries,
     get_me_profile,
+    normalize_ingredient_name,
     router,
     serialize_social_highlight,
     update_recipe_social_action,
 )
-from cookiful_db.models import Recipe, RecipeIngredient, RecipeStatus, RecipeVersion, RecipeVisibility, User, UserProfile, UserRecipeSocialAction, UserStatus
+from cookiful_db.models import Recipe, RecipeIngredient, RecipeStatus, RecipeVersion, RecipeVisibility, User, UserPantryItem, UserProfile, UserRecipeSocialAction, UserStatus
 
 
 class FakeSettings:
@@ -75,6 +81,8 @@ class FakeSession:
         return self.results.pop(0)
 
     def add(self, value):
+        if getattr(value, "id", None) is None:
+            value.id = uuid4()
         self.added_objects.append(value)
 
     def delete(self, value):
@@ -135,6 +143,15 @@ def make_ingredient(version: RecipeVersion, text: str = "2 slices sourdough") ->
     )
 
 
+def make_pantry_item(user: User, ingredient_name: str = "2 slices sourdough") -> UserPantryItem:
+    return UserPantryItem(
+        id=uuid4(),
+        user_id=user.id,
+        ingredient_name=ingredient_name,
+        normalized_name=normalize_ingredient_name(ingredient_name),
+    )
+
+
 class MeAuthTests(unittest.TestCase):
     def test_get_current_user_id_accepts_access_token(self) -> None:
         user = make_user()
@@ -162,6 +179,8 @@ class MeRouteMetadataTests(unittest.TestCase):
 
         self.assertIn("/me/profile", me_paths)
         self.assertIn("/me/recipe-actions", me_paths)
+        self.assertIn("/me/groceries", me_paths)
+        self.assertIn("/me/groceries/pantry-items", me_paths)
 
     def test_recipe_actions_route_uses_put(self) -> None:
         recipe_actions_route = next(
@@ -171,6 +190,15 @@ class MeRouteMetadataTests(unittest.TestCase):
         )
 
         self.assertIn("PUT", recipe_actions_route.methods)
+
+    def test_groceries_route_uses_get(self) -> None:
+        groceries_route = next(
+            route
+            for route in router.routes
+            if isinstance(route, APIRoute) and route.path == "/groceries"
+        )
+
+        self.assertIn("GET", groceries_route.methods)
 
 
 class RecipeSocialActionTests(unittest.TestCase):
@@ -294,6 +322,78 @@ class MeProfileTests(unittest.TestCase):
         self.assertEqual(len(response.liked_recipes), 1)
         self.assertEqual(response.liked_recipes[0].title, "Tomato Toast")
         self.assertEqual(response.grocery_items, [])
+
+
+class MeGroceriesTests(unittest.TestCase):
+    def test_normalize_ingredient_name_collapses_case_and_spaces(self) -> None:
+        self.assertEqual(normalize_ingredient_name("  Two   Eggs  "), "two eggs")
+        self.assertEqual(normalize_ingredient_name(None), "")
+
+    def test_build_groceries_response_marks_saved_ingredients_in_pantry(self) -> None:
+        user = make_user()
+        recipe = make_recipe("Braised Beans")
+        version = make_version(recipe)
+        ingredient = make_ingredient(version, "2 cups cooked white beans")
+        pantry_item = make_pantry_item(user, "2 cups cooked white beans")
+
+        response = build_groceries_response([(recipe, ingredient)], [pantry_item])
+
+        self.assertEqual(response.saved_recipe_count, 1)
+        self.assertEqual(len(response.pantry_items), 1)
+        self.assertEqual(response.required_ingredients[0].text, "2 cups cooked white beans")
+        self.assertEqual(response.required_ingredients[0].normalized_name, "2 cups cooked white beans")
+        self.assertTrue(response.required_ingredients[0].in_pantry)
+
+    def test_get_me_groceries_loads_saved_ingredients_and_pantry_items(self) -> None:
+        user = make_user()
+        recipe = make_recipe("Tomato Toast")
+        version = make_version(recipe)
+        pantry_item = make_pantry_item(user)
+        rows = [(recipe, make_ingredient(version))]
+        fake_session = FakeSession(
+            [
+                FakeResult(scalar_value=user),
+                FakeResult(all_values=rows),
+                FakeResult(scalar_values=[pantry_item]),
+            ]
+        )
+
+        with patch("apps.api.src.api.routes.me.SessionLocal", return_value=fake_session):
+            response = get_me_groceries(user.id)
+
+        self.assertEqual(response.saved_recipe_count, 1)
+        self.assertEqual(response.pantry_items[0].ingredient_name, "2 slices sourdough")
+        self.assertTrue(response.required_ingredients[0].in_pantry)
+
+    def test_create_me_pantry_item_saves_normalized_ingredient(self) -> None:
+        user = make_user()
+        fake_session = FakeSession(
+            [
+                FakeResult(scalar_value=user),
+                FakeResult(scalar_value=None),
+            ]
+        )
+
+        with patch("apps.api.src.api.routes.me.SessionLocal", return_value=fake_session):
+            response = create_me_pantry_item(PantryItemRequest(ingredient_name="  Fresh Eggs  "), user.id)
+
+        self.assertTrue(fake_session.committed)
+        self.assertEqual(len(fake_session.added_objects), 1)
+        self.assertIsInstance(fake_session.added_objects[0], UserPantryItem)
+        self.assertEqual(fake_session.added_objects[0].ingredient_name, "Fresh Eggs")
+        self.assertEqual(fake_session.added_objects[0].normalized_name, "fresh eggs")
+        self.assertEqual(response.normalized_name, "fresh eggs")
+
+    def test_delete_me_pantry_item_removes_user_item(self) -> None:
+        user = make_user()
+        pantry_item = make_pantry_item(user, "Fresh Eggs")
+        fake_session = FakeSession([FakeResult(scalar_value=pantry_item)])
+
+        with patch("apps.api.src.api.routes.me.SessionLocal", return_value=fake_session):
+            delete_me_pantry_item(pantry_item.id, user.id)
+
+        self.assertTrue(fake_session.committed)
+        self.assertEqual(fake_session.deleted_objects, [pantry_item])
 
 
 class SocialHighlightsTests(unittest.TestCase):

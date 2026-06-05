@@ -4,7 +4,7 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import selectinload
 
@@ -18,6 +18,7 @@ from cookiful_db.models import (
     RecipeVersion,
     RecipeVisibility,
     User,
+    UserPantryItem,
     UserProfile,
     UserRecipeSocialAction,
 )
@@ -78,6 +79,31 @@ class SocialHighlightResponse(BaseModel):
 
 class SocialHighlightsResponse(BaseModel):
     stories: list[SocialHighlightResponse]
+
+
+class PantryItemRequest(BaseModel):
+    ingredient_name: str = Field(max_length=160)
+
+
+class PantryItemResponse(BaseModel):
+    id: UUID
+    ingredient_name: str
+    normalized_name: str
+
+
+class GroceryRequiredIngredientResponse(BaseModel):
+    id: str
+    text: str
+    normalized_name: str
+    recipe_id: UUID
+    recipe_title: str
+    in_pantry: bool
+
+
+class MeGroceriesResponse(BaseModel):
+    pantry_items: list[PantryItemResponse]
+    required_ingredients: list[GroceryRequiredIngredientResponse]
+    saved_recipe_count: int
 
 
 def unauthorized_error() -> HTTPException:
@@ -178,6 +204,36 @@ def build_profile_grocery_items_query(user_id: UUID) -> Select[tuple[Recipe, Rec
     )
 
 
+def build_user_pantry_items_query(user_id: UUID) -> Select[tuple[UserPantryItem]]:
+    return (
+        select(UserPantryItem)
+        .where(UserPantryItem.user_id == user_id)
+        .order_by(UserPantryItem.ingredient_name.asc())
+    )
+
+
+def build_user_pantry_item_lookup_query(user_id: UUID, normalized_name: str) -> Select[tuple[UserPantryItem]]:
+    return (
+        select(UserPantryItem)
+        .where(
+            UserPantryItem.user_id == user_id,
+            UserPantryItem.normalized_name == normalized_name,
+        )
+        .limit(1)
+    )
+
+
+def build_user_pantry_item_by_id_query(user_id: UUID, item_id: UUID) -> Select[tuple[UserPantryItem]]:
+    return (
+        select(UserPantryItem)
+        .where(
+            UserPantryItem.user_id == user_id,
+            UserPantryItem.id == item_id,
+        )
+        .limit(1)
+    )
+
+
 def build_social_highlights_query(
     limit: int,
 ) -> Select[tuple[UserRecipeSocialAction, User, UserProfile | None, Recipe, RecipeVersion | None]]:
@@ -214,6 +270,46 @@ def serialize_me_user(user: User) -> MeUserResponse:
         email=user.email,
         username=user.username,
         display_name=display_name,
+    )
+
+
+def normalize_ingredient_name(value: str | None) -> str:
+    return " ".join((value or "").strip().casefold().split())
+
+
+def normalize_recipe_ingredient(ingredient: RecipeIngredient) -> str:
+    return normalize_ingredient_name(ingredient.ner_name or ingredient.ingredient_text)
+
+
+def serialize_pantry_item(item: UserPantryItem) -> PantryItemResponse:
+    return PantryItemResponse(
+        id=item.id,
+        ingredient_name=item.ingredient_name,
+        normalized_name=item.normalized_name,
+    )
+
+
+def build_groceries_response(
+    grocery_rows: list[tuple[Recipe, RecipeIngredient]],
+    pantry_items: list[UserPantryItem],
+) -> MeGroceriesResponse:
+    pantry_lookup = {item.normalized_name for item in pantry_items}
+    saved_recipe_ids = {recipe.id for recipe, _ingredient in grocery_rows}
+
+    return MeGroceriesResponse(
+        pantry_items=[serialize_pantry_item(item) for item in pantry_items],
+        required_ingredients=[
+            GroceryRequiredIngredientResponse(
+                id=f"{recipe.id}:{ingredient.id}",
+                text=ingredient.ingredient_text,
+                normalized_name=normalize_recipe_ingredient(ingredient),
+                recipe_id=recipe.id,
+                recipe_title=recipe.title,
+                in_pantry=normalize_recipe_ingredient(ingredient) in pantry_lookup,
+            )
+            for recipe, ingredient in grocery_rows
+        ],
+        saved_recipe_count=len(saved_recipe_ids),
     )
 
 
@@ -346,6 +442,65 @@ def get_me_profile(user_id: Annotated[UUID, Depends(get_current_user_id)]) -> Me
         grocery_rows = session.execute(build_profile_grocery_items_query(user_id)).all()
 
     return build_profile_response(user, list(rows), list(grocery_rows))
+
+
+@router.get("/groceries", response_model=MeGroceriesResponse)
+def get_me_groceries(user_id: Annotated[UUID, Depends(get_current_user_id)]) -> MeGroceriesResponse:
+    with SessionLocal() as session:
+        user = session.execute(build_me_user_query(user_id)).scalar_one_or_none()
+        if user is None:
+            raise unauthorized_error()
+
+        grocery_rows = session.execute(build_profile_grocery_items_query(user_id)).all()
+        pantry_items = session.execute(build_user_pantry_items_query(user_id)).scalars().all()
+
+    return build_groceries_response(list(grocery_rows), list(pantry_items))
+
+
+@router.post("/groceries/pantry-items", response_model=PantryItemResponse, status_code=status.HTTP_201_CREATED)
+def create_me_pantry_item(
+    payload: PantryItemRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+) -> PantryItemResponse:
+    ingredient_name = payload.ingredient_name.strip()
+    normalized_name = normalize_ingredient_name(ingredient_name)
+    if not normalized_name:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Ingredient name is required.")
+
+    with SessionLocal() as session:
+        user = session.execute(build_me_user_query(user_id)).scalar_one_or_none()
+        if user is None:
+            raise unauthorized_error()
+
+        existing_item = session.execute(
+            build_user_pantry_item_lookup_query(user_id, normalized_name)
+        ).scalar_one_or_none()
+        if existing_item is not None:
+            return serialize_pantry_item(existing_item)
+
+        pantry_item = UserPantryItem(
+            user_id=user_id,
+            ingredient_name=ingredient_name,
+            normalized_name=normalized_name,
+        )
+        session.add(pantry_item)
+        session.commit()
+
+    return serialize_pantry_item(pantry_item)
+
+
+@router.delete("/groceries/pantry-items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_me_pantry_item(
+    item_id: UUID,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+) -> None:
+    with SessionLocal() as session:
+        pantry_item = session.execute(build_user_pantry_item_by_id_query(user_id, item_id)).scalar_one_or_none()
+        if pantry_item is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pantry item not found.")
+
+        session.delete(pantry_item)
+        session.commit()
 
 
 @router.get("/social-highlights", response_model=SocialHighlightsResponse)

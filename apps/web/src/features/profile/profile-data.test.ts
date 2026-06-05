@@ -33,14 +33,6 @@ describe("toProfileData", () => {
           },
         ],
         reposted_recipes: [],
-        grocery_items: [
-          {
-            id: "recipe-2:ingredient-1",
-            text: "2 cups cooked white beans",
-            recipe_id: "recipe-2",
-            recipe_title: "Braised Beans",
-          },
-        ],
       }),
     ).toEqual({
       user: {
@@ -76,14 +68,6 @@ describe("toProfileData", () => {
         },
       ],
       repostedRecipes: [],
-      groceryItems: [
-        {
-          id: "recipe-2:ingredient-1",
-          text: "2 cups cooked white beans",
-          recipeId: "recipe-2",
-          recipeTitle: "Braised Beans",
-        },
-      ],
     });
   });
 });

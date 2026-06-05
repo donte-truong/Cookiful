@@ -4,6 +4,7 @@ import { formatRecipeDurationLabel } from "../recipes/recipe-formatters";
 export { formatRecipeDurationLabel };
 
 export const HOME_CURATED_RECIPE_LIMIT = 4;
+export const HOME_HERO_QUICK_ACTION_RECIPE_LIMIT = 3;
 export const HOME_RECIPE_SEARCH_LIMIT = 5;
 
 export type CuratedRecipeApiRecord = {
@@ -24,6 +25,10 @@ type CuratedRecipesApiResponse = {
 
 type FetchCuratedRecipesOptions = {
   excludeIds?: string[];
+  limit?: number;
+};
+
+type FetchHeroQuickActionRecipesOptions = {
   limit?: number;
 };
 
@@ -57,6 +62,22 @@ export function buildRecipeSearchUrl({
   });
 
   return `/api/recipes/search?${params.toString()}`;
+}
+
+export function buildPantryMatchesUrl({
+  limit = HOME_HERO_QUICK_ACTION_RECIPE_LIMIT,
+}: FetchHeroQuickActionRecipesOptions = {}): string {
+  const params = new URLSearchParams({ limit: String(limit) });
+
+  return `/api/recipes/pantry-matches?${params.toString()}`;
+}
+
+export function buildQuickDinnerUrl({
+  limit = HOME_HERO_QUICK_ACTION_RECIPE_LIMIT,
+}: FetchHeroQuickActionRecipesOptions = {}): string {
+  const params = new URLSearchParams({ limit: String(limit) });
+
+  return `/api/recipes/quick-dinner?${params.toString()}`;
 }
 
 export function toHomeRecipe(recipe: CuratedRecipeApiRecord): HomeRecipe {
@@ -126,6 +147,36 @@ export async function fetchRecipeSearch(
 
   if (!response.ok) {
     throw new Error("Unable to search recipes.");
+  }
+
+  const payload = (await response.json()) as CuratedRecipesApiResponse;
+  return payload.recipes.map(toHomeRecipe);
+}
+
+export async function fetchPantryMatchRecipes(
+  options: FetchHeroQuickActionRecipesOptions = {},
+): Promise<HomeRecipe[]> {
+  const response = await fetch(buildPantryMatchesUrl(options), {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to load pantry matches.");
+  }
+
+  const payload = (await response.json()) as CuratedRecipesApiResponse;
+  return payload.recipes.map(toHomeRecipe);
+}
+
+export async function fetchQuickDinnerRecipes(
+  options: FetchHeroQuickActionRecipesOptions = {},
+): Promise<HomeRecipe[]> {
+  const response = await fetch(buildQuickDinnerUrl(options), {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to load quick dinner recipes.");
   }
 
   const payload = (await response.json()) as CuratedRecipesApiResponse;

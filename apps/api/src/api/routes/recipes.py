@@ -8,14 +8,15 @@ from textwrap import shorten
 from typing import Annotated, Callable
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from sqlalchemy import Select, func, select
+from sqlalchemy import Select, func, literal, not_, or_, select
 
+from apps.api.src.api.routes.auth import decode_access_token
 from cookiful_db import SessionLocal
 from cookiful_db.paths import REPO_ROOT
-from cookiful_db.models import Recipe, RecipeStatus, RecipeVersion, RecipeVisibility
+from cookiful_db.models import Recipe, RecipeIngredient, RecipeStatus, RecipeVersion, RecipeVisibility, UserPantryItem
 
 
 router = APIRouter()
@@ -25,6 +26,34 @@ RECIPE_BOX_UTILS_PATH = REPO_ROOT / "packages" / "utils" / "recipe-box" / "src" 
 RECIPE_BOX_IMAGE_URL_PREFIX = "/api/recipes/images/recipe-box"
 RECIPE_BOX_SOURCE_KEYS = frozenset({"ar", "epi", "fn"})
 RECIPE_BOX_IMAGE_FILENAME_PATTERN = re.compile(r"^[A-Za-z0-9_-]+\.jpg$")
+QUICK_DINNER_TITLE_KEYWORDS = (
+    "beans",
+    "beef",
+    "chicken",
+    "dinner",
+    "fish",
+    "noodle",
+    "pasta",
+    "pork",
+    "rice",
+    "salad",
+    "shrimp",
+    "skillet",
+    "soup",
+    "taco",
+)
+QUICK_DINNER_EXCLUDED_TITLE_KEYWORDS = (
+    "brownie",
+    "cake",
+    "cookie",
+    "cupcake",
+    "dessert",
+    "frosting",
+    "pie",
+    "pudding",
+    "slow cooker",
+    "sugar",
+)
 
 
 class CuratedRecipeResponse(BaseModel):
@@ -154,6 +183,72 @@ def build_recipe_search_query(query: str, limit: int) -> Select[tuple[Recipe, Re
     )
 
 
+def build_recipe_duration_expression():
+    recipe_field_duration = func.coalesce(
+        Recipe.total_time_minutes,
+        func.nullif(func.coalesce(Recipe.prep_time_minutes, 0) + func.coalesce(Recipe.cook_time_minutes, 0), 0),
+    )
+    step_estimate_duration = func.greatest(
+        literal(15),
+        func.least(literal(90), func.coalesce(func.jsonb_array_length(RecipeVersion.raw_directions), 0) * 8),
+    )
+
+    return func.coalesce(recipe_field_duration, step_estimate_duration, literal(30))
+
+
+def build_quick_dinner_recipes_query(limit: int, max_minutes: int) -> Select[tuple[Recipe, RecipeVersion | None]]:
+    duration_expression = build_recipe_duration_expression()
+    dinner_match_conditions = [
+        Recipe.meal_type.ilike("%dinner%"),
+        Recipe.meal_type.ilike("%main%"),
+        *[Recipe.title.ilike(f"%{keyword}%") for keyword in QUICK_DINNER_TITLE_KEYWORDS],
+    ]
+    excluded_title_conditions = [
+        Recipe.title.ilike(f"%{keyword}%") for keyword in QUICK_DINNER_EXCLUDED_TITLE_KEYWORDS
+    ]
+
+    return (
+        select(Recipe, RecipeVersion)
+        .outerjoin(RecipeVersion, RecipeVersion.id == Recipe.current_version_id)
+        .where(
+            Recipe.status == RecipeStatus.PUBLISHED,
+            Recipe.visibility == RecipeVisibility.PUBLIC,
+            Recipe.current_version_id.is_not(None),
+            duration_expression <= max_minutes,
+            or_(*dinner_match_conditions),
+            not_(or_(*excluded_title_conditions)),
+        )
+        .order_by(duration_expression.asc(), func.random())
+        .limit(limit)
+    )
+
+
+def build_pantry_match_recipes_query(user_id: UUID, limit: int) -> Select[tuple[Recipe, RecipeVersion | None, int]]:
+    normalized_recipe_ingredient = func.lower(
+        func.btrim(func.coalesce(RecipeIngredient.ner_name, RecipeIngredient.ingredient_text))
+    )
+    matched_ingredient_count = func.count(RecipeIngredient.id).label("matched_ingredient_count")
+
+    return (
+        select(Recipe, RecipeVersion, matched_ingredient_count)
+        .join(RecipeVersion, RecipeVersion.id == Recipe.current_version_id)
+        .join(RecipeIngredient, RecipeIngredient.recipe_version_id == RecipeVersion.id)
+        .join(
+            UserPantryItem,
+            UserPantryItem.normalized_name == normalized_recipe_ingredient,
+        )
+        .where(
+            UserPantryItem.user_id == user_id,
+            Recipe.status == RecipeStatus.PUBLISHED,
+            Recipe.visibility == RecipeVisibility.PUBLIC,
+            Recipe.current_version_id.is_not(None),
+        )
+        .group_by(Recipe.id, RecipeVersion.id)
+        .order_by(matched_ingredient_count.desc(), func.random())
+        .limit(limit)
+    )
+
+
 def build_recipe_description(recipe: Recipe, version: RecipeVersion | None) -> str:
     description = (recipe.description or "").strip()
     if description:
@@ -236,6 +331,32 @@ def serialize_recipe_detail(recipe: Recipe, version: RecipeVersion | None) -> Re
     )
 
 
+def unauthorized_error() -> HTTPException:
+    return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication is required.")
+
+
+def get_current_user_id(authorization: Annotated[str | None, Header()] = None) -> UUID:
+    if authorization is None:
+        raise unauthorized_error()
+
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise unauthorized_error()
+
+    payload = decode_access_token(token)
+    if payload is None:
+        raise unauthorized_error()
+
+    subject = payload.get("sub")
+    if not isinstance(subject, str):
+        raise unauthorized_error()
+
+    try:
+        return UUID(subject)
+    except ValueError as exc:
+        raise unauthorized_error() from exc
+
+
 @router.get("/images/recipe-box/{source_key}/{filename}")
 def get_recipe_box_image(source_key: str, filename: str) -> FileResponse:
     if source_key not in RECIPE_BOX_SOURCE_KEYS or RECIPE_BOX_IMAGE_FILENAME_PATTERN.fullmatch(filename) is None:
@@ -277,6 +398,32 @@ def search_recipes(
 
     return CuratedRecipesResponse(
         recipes=[serialize_curated_recipe(recipe, version) for recipe, version in rows]
+    )
+
+
+@router.get("/quick-dinner", response_model=CuratedRecipesResponse)
+def list_quick_dinner_recipes(
+    limit: Annotated[int, Query(ge=1, le=6)] = 3,
+    max_minutes: Annotated[int, Query(ge=10, le=60)] = 30,
+) -> CuratedRecipesResponse:
+    with SessionLocal() as session:
+        rows = session.execute(build_quick_dinner_recipes_query(limit=limit, max_minutes=max_minutes)).all()
+
+    return CuratedRecipesResponse(
+        recipes=[serialize_curated_recipe(recipe, version) for recipe, version in rows]
+    )
+
+
+@router.get("/pantry-matches", response_model=CuratedRecipesResponse)
+def list_pantry_match_recipes(
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    limit: Annotated[int, Query(ge=1, le=6)] = 3,
+) -> CuratedRecipesResponse:
+    with SessionLocal() as session:
+        rows = session.execute(build_pantry_match_recipes_query(user_id=user_id, limit=limit)).all()
+
+    return CuratedRecipesResponse(
+        recipes=[serialize_curated_recipe(recipe, version) for recipe, version, _match_count in rows]
     )
 
 

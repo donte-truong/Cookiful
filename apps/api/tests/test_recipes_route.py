@@ -10,11 +10,15 @@ from sqlalchemy.dialects import postgresql
 from apps.api.src.api.routes.recipes import (
     build_recipe_box_public_image_url,
     build_curated_recipes_query,
+    build_pantry_match_recipes_query,
+    build_quick_dinner_recipes_query,
     build_recipe_detail_query,
     build_recipe_search_query,
     get_recipe_detail,
     get_recipe_box_image,
+    list_pantry_match_recipes,
     list_curated_recipes,
+    list_quick_dinner_recipes,
     search_recipes,
     serialize_curated_recipe,
     serialize_recipe_detail,
@@ -27,6 +31,7 @@ def make_recipe(
     title: str = "Archive Onion Tart",
     hero_image_url: str | None = None,
     source_url: str | None = None,
+    total_time_minutes: int | None = None,
 ) -> Recipe:
     recipe_id = uuid4()
     return Recipe(
@@ -41,6 +46,7 @@ def make_recipe(
         visibility=RecipeVisibility.PUBLIC,
         cuisine_type="French country",
         hero_image_url=hero_image_url,
+        total_time_minutes=total_time_minutes,
     )
 
 
@@ -112,6 +118,51 @@ class BuildRecipeSearchQueryTests(unittest.TestCase):
         self.assertIn("recipes.title ILIKE '%%tomato%%'", compiled_sql)
         self.assertIn("ORDER BY recipes.title ASC", compiled_sql)
         self.assertIn("LIMIT 5", compiled_sql)
+
+
+class BuildQuickDinnerRecipesQueryTests(unittest.TestCase):
+    def test_query_filters_public_published_fast_recipes_and_limits_results(self) -> None:
+        statement = build_quick_dinner_recipes_query(limit=3, max_minutes=30)
+        compiled_sql = str(
+            statement.compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={"literal_binds": True},
+            )
+        )
+
+        self.assertIn("recipes.status = 'PUBLISHED'", compiled_sql)
+        self.assertIn("recipes.visibility = 'PUBLIC'", compiled_sql)
+        self.assertIn("recipes.current_version_id IS NOT NULL", compiled_sql)
+        self.assertIn("<= 30", compiled_sql)
+        self.assertIn("recipes.title ILIKE '%%pasta%%'", compiled_sql)
+        self.assertIn("recipes.title ILIKE '%%slow cooker%%'", compiled_sql)
+        self.assertIn("recipes.title ILIKE '%%cookie%%'", compiled_sql)
+        self.assertIn("NOT", compiled_sql)
+        self.assertIn("ORDER BY", compiled_sql)
+        self.assertIn("random()", compiled_sql)
+        self.assertIn("LIMIT 3", compiled_sql)
+
+
+class BuildPantryMatchRecipesQueryTests(unittest.TestCase):
+    def test_query_matches_user_pantry_items_to_recipe_ingredients(self) -> None:
+        user_id = UUID("55555555-5555-5555-5555-555555555555")
+
+        statement = build_pantry_match_recipes_query(user_id=user_id, limit=3)
+        compiled_sql = str(
+            statement.compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={"literal_binds": True},
+            )
+        )
+
+        self.assertIn("JOIN user_pantry_items", compiled_sql)
+        self.assertIn("JOIN recipe_ingredients", compiled_sql)
+        self.assertIn(str(user_id), compiled_sql)
+        self.assertIn("recipes.status = 'PUBLISHED'", compiled_sql)
+        self.assertIn("recipes.visibility = 'PUBLIC'", compiled_sql)
+        self.assertIn("count(recipe_ingredients.id)", compiled_sql)
+        self.assertIn("ORDER BY matched_ingredient_count DESC", compiled_sql)
+        self.assertIn("LIMIT 3", compiled_sql)
 
 
 class SerializeCuratedRecipeTests(unittest.TestCase):
@@ -307,6 +358,89 @@ class SearchRecipesRouteTests(unittest.TestCase):
         response = search_recipes(q=" ", limit=3)
 
         self.assertEqual(response.recipes, [])
+
+
+class ListQuickDinnerRecipesRouteTests(unittest.TestCase):
+    def test_route_returns_serialized_quick_recipes_from_session_rows(self) -> None:
+        recipe = make_recipe(title="Fast Tomato Pasta", total_time_minutes=18)
+        version = make_version(recipe.id)
+
+        class FakeResult:
+            def all(self):
+                return [(recipe, version)]
+
+        class FakeSession:
+            def __init__(self) -> None:
+                self.executed_statement = None
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, traceback) -> bool:
+                return False
+
+            def execute(self, statement):
+                self.executed_statement = statement
+                return FakeResult()
+
+        fake_session = FakeSession()
+
+        with patch("apps.api.src.api.routes.recipes.SessionLocal", return_value=fake_session):
+            response = list_quick_dinner_recipes(limit=2, max_minutes=25)
+
+        self.assertEqual(len(response.recipes), 1)
+        self.assertEqual(response.recipes[0].title, "Fast Tomato Pasta")
+
+        compiled_sql = str(
+            fake_session.executed_statement.compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={"literal_binds": True},
+            )
+        )
+        self.assertIn("<= 25", compiled_sql)
+        self.assertIn("LIMIT 2", compiled_sql)
+
+
+class ListPantryMatchRecipesRouteTests(unittest.TestCase):
+    def test_route_returns_serialized_recipes_from_matching_rows(self) -> None:
+        user_id = UUID("55555555-5555-5555-5555-555555555555")
+        recipe = make_recipe(title="Pantry Tomato Pasta")
+        version = make_version(recipe.id)
+
+        class FakeResult:
+            def all(self):
+                return [(recipe, version, 2)]
+
+        class FakeSession:
+            def __init__(self) -> None:
+                self.executed_statement = None
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, traceback) -> bool:
+                return False
+
+            def execute(self, statement):
+                self.executed_statement = statement
+                return FakeResult()
+
+        fake_session = FakeSession()
+
+        with patch("apps.api.src.api.routes.recipes.SessionLocal", return_value=fake_session):
+            response = list_pantry_match_recipes(user_id=user_id, limit=2)
+
+        self.assertEqual(len(response.recipes), 1)
+        self.assertEqual(response.recipes[0].title, "Pantry Tomato Pasta")
+
+        compiled_sql = str(
+            fake_session.executed_statement.compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={"literal_binds": True},
+            )
+        )
+        self.assertIn(str(user_id), compiled_sql)
+        self.assertIn("LIMIT 2", compiled_sql)
 
 
 class GetRecipeDetailRouteTests(unittest.TestCase):
