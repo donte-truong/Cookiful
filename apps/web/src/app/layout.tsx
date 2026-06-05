@@ -8,10 +8,10 @@ export const metadata: Metadata = {
   description:
     "An editorial cooking experience blending curated recipes, planning, and AI-assisted kitchen orchestration.",
   icons: {
-    icon: "/brand/icon.svg",
-    shortcut: "/brand/icon.svg",
-    apple: "/brand/icon.svg"
-  }
+    icon: `${process.env.NEXT_PUBLIC_BASE_PATH}/brand/icon.svg`,
+    shortcut: `${process.env.NEXT_PUBLIC_BASE_PATH}/brand/icon.svg`,
+    apple: `${process.env.NEXT_PUBLIC_BASE_PATH}/brand/icon.svg`,
+  },
 };
 
 export default function RootLayout({
