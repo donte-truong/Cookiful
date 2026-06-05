@@ -1,14 +1,6 @@
-"use server";
-
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-
-import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from "./session";
+import { buildBrowserApiUrl } from "../api/client";
+import { persistAuthSessionTokens } from "./session";
 import type { AuthFormState } from "./types";
-
-const DEFAULT_LOCAL_API_BASE_URL = "http://localhost:4000/api";
-const ACCESS_TOKEN_MAX_AGE_SECONDS = 60 * 15;
-const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 type BackendAuthUser = {
   id: string;
@@ -25,25 +17,6 @@ type BackendAuthResponse = {
 };
 
 type AuthEndpoint = "/auth/login" | "/auth/register";
-
-function buildAuthApiUrl(endpoint: AuthEndpoint): string {
-  const configuredApiUrl =
-    process.env.COOKIFUL_API_URL?.trim() ||
-    process.env.NEXT_PUBLIC_API_URL?.trim();
-  const apiBaseUrl = configuredApiUrl
-    ? configuredApiUrl
-    : process.env.NODE_ENV !== "production"
-      ? DEFAULT_LOCAL_API_BASE_URL
-      : "";
-
-  if (!apiBaseUrl) {
-    throw new Error(
-      "COOKIFUL_API_URL or NEXT_PUBLIC_API_URL must be configured for authentication.",
-    );
-  }
-
-  return `${apiBaseUrl.replace(/\/$/, "")}${endpoint}`;
-}
 
 function readFormValue(formData: FormData, name: string): string {
   const value = formData.get(name);
@@ -135,7 +108,7 @@ async function postAuth(
   let response: Response;
 
   try {
-    response = await fetch(buildAuthApiUrl(endpoint), {
+    response = await fetch(buildBrowserApiUrl(endpoint), {
       method: "POST",
       cache: "no-store",
       headers: {
@@ -167,28 +140,14 @@ async function postAuth(
   return responseBody;
 }
 
-async function persistAuthSession(authResponse: BackendAuthResponse): Promise<void> {
-  const cookieStore = await cookies();
-  const secure = process.env.NODE_ENV === "production";
-  const baseCookieOptions = {
-    httpOnly: true,
-    path: "/",
-    sameSite: "lax" as const,
-    secure,
-  };
-
-  cookieStore.set(ACCESS_TOKEN_COOKIE, authResponse.access_token, {
-    ...baseCookieOptions,
-    maxAge: ACCESS_TOKEN_MAX_AGE_SECONDS,
-  });
-  cookieStore.set(REFRESH_TOKEN_COOKIE, authResponse.refresh_token, {
-    ...baseCookieOptions,
-    maxAge: REFRESH_TOKEN_MAX_AGE_SECONDS,
+function persistClientAuthSession(authResponse: BackendAuthResponse): void {
+  persistAuthSessionTokens({
+    accessToken: authResponse.access_token,
+    refreshToken: authResponse.refresh_token,
   });
 }
 
-export async function loginWithPassword(
-  _previousState: AuthFormState,
+export async function loginWithPasswordClient(
   formData: FormData,
 ): Promise<AuthFormState> {
   const email = readFormValue(formData, "email");
@@ -207,12 +166,11 @@ export async function loginWithPassword(
     return response;
   }
 
-  await persistAuthSession(response);
-  redirect("/home");
+  persistClientAuthSession(response);
+  return { status: "success", message: "" };
 }
 
-export async function registerWithPassword(
-  _previousState: AuthFormState,
+export async function registerWithPasswordClient(
   formData: FormData,
 ): Promise<AuthFormState> {
   const displayName = readFormValue(formData, "displayName");
@@ -244,6 +202,6 @@ export async function registerWithPassword(
     return response;
   }
 
-  await persistAuthSession(response);
-  redirect("/home");
+  persistClientAuthSession(response);
+  return { status: "success", message: "" };
 }

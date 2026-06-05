@@ -1,8 +1,5 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-
-import { getRecipesApiBaseUrl } from "../../app/api/recipes/curated/route-config";
-import { ACCESS_TOKEN_COOKIE } from "../auth/session";
+import { buildBrowserApiUrl } from "../api/client";
+import { getStoredAccessToken } from "../auth/session";
 
 type PantryItemApiRecord = {
   id: string;
@@ -55,6 +52,12 @@ export type GroceriesData = {
   savedRecipeCount: number;
 };
 
+export const EMPTY_GROCERIES_DATA: GroceriesData = {
+  pantryItems: [],
+  requiredIngredients: [],
+  savedRecipeCount: 0,
+};
+
 export function toGroceriesData(payload: GroceriesApiResponse): GroceriesData {
   return {
     pantryItems: payload.pantry_items.map((item) => ({
@@ -102,14 +105,8 @@ export function groupRequiredIngredientsByRecipe(
   return Array.from(groups.values());
 }
 
-export async function fetchGroceriesData(): Promise<GroceriesData> {
-  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
-
-  if (!accessToken) {
-    redirect("/login");
-  }
-
-  const response = await fetch(`${getRecipesApiBaseUrl()}/me/groceries`, {
+export async function fetchGroceriesData(accessToken: string): Promise<GroceriesData> {
+  const response = await fetch(buildBrowserApiUrl("/me/groceries"), {
     cache: "no-store",
     headers: {
       accept: "application/json",
@@ -117,13 +114,19 @@ export async function fetchGroceriesData(): Promise<GroceriesData> {
     },
   });
 
-  if (response.status === 401) {
-    redirect("/login");
-  }
-
   if (!response.ok) {
     throw new Error("Unable to load groceries.");
   }
 
   return toGroceriesData((await response.json()) as GroceriesApiResponse);
+}
+
+export async function fetchStoredGroceriesData(): Promise<GroceriesData | null> {
+  const accessToken = getStoredAccessToken();
+
+  if (!accessToken) {
+    return null;
+  }
+
+  return fetchGroceriesData(accessToken);
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { fetchProfileData } from "../../features/profile/profile-data";
+import { EMPTY_PROFILE_DATA } from "../../features/profile/profile-data";
 import { ProfilePage } from "../../features/profile/profile-page";
 
 export const metadata: Metadata = {
@@ -8,8 +8,6 @@ export const metadata: Metadata = {
   description: "Review your liked, saved, and reposted Cookiful recipes."
 };
 
-export default async function ProfileRoute() {
-  const profile = await fetchProfileData();
-
-  return <ProfilePage profile={profile} />;
+export default function ProfileRoute() {
+  return <ProfilePage profile={EMPTY_PROFILE_DATA} />;
 }

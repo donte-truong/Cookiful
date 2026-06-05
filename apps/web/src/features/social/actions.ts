@@ -1,9 +1,5 @@
-"use server";
-
-import { cookies } from "next/headers";
-
-import { getRecipesApiBaseUrl } from "../../app/api/recipes/curated/route-config";
-import { ACCESS_TOKEN_COOKIE } from "../auth/session";
+import { buildBrowserApiUrl } from "../api/client";
+import { getStoredAccessToken } from "../auth/session";
 
 export type RecipeSocialAction = "like" | "save" | "repost";
 
@@ -51,7 +47,7 @@ export async function updateRecipeSocialAction({
   action,
   active,
 }: UpdateRecipeSocialActionInput): Promise<RecipeSocialActionResult> {
-  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = getStoredAccessToken();
 
   if (!accessToken) {
     return {
@@ -63,7 +59,7 @@ export async function updateRecipeSocialAction({
   let response: Response;
 
   try {
-    response = await fetch(`${getRecipesApiBaseUrl()}/me/recipe-actions`, {
+    response = await fetch(buildBrowserApiUrl("/me/recipe-actions"), {
       method: "PUT",
       cache: "no-store",
       headers: {

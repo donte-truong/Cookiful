@@ -48,6 +48,12 @@ const defaultSocialActions: RecipeSocialActionState = {
   reposted: false,
 };
 
+const isStaticExport = process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
+
+function isHttpUrl(value: string | null | undefined): value is string {
+  return value?.startsWith("http://") === true || value?.startsWith("https://") === true;
+}
+
 function getActionValue(
   socialActions: RecipeSocialActionState,
   action: RecipeSocialAction,
@@ -101,9 +107,18 @@ export function HomeRecipeCard({
   );
   const imageSrc = !imageFailed && recipe.image ? recipe.image : undefined;
   const hasImage = imageSrc !== undefined;
+  const recipeHref =
+    isStaticExport && isHttpUrl(recipe.sourceUrl)
+      ? recipe.sourceUrl
+      : isStaticExport
+        ? "/home#curated-feed"
+        : `/recipes/${recipe.id}`;
+  const isExternalRecipeHref = isHttpUrl(recipeHref);
 
   function handleOpenRecipe() {
-    setIsOpeningRecipe(true);
+    if (!isStaticExport) {
+      setIsOpeningRecipe(true);
+    }
   }
 
   function handleSocialAction(action: RecipeSocialAction) {
@@ -135,8 +150,10 @@ export function HomeRecipeCard({
       <Link
         aria-label={`Open ${recipe.title}`}
         className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-hearth-copper/60"
-        href={`/recipes/${recipe.id}`}
+        href={recipeHref}
         onClick={handleOpenRecipe}
+        rel={isExternalRecipeHref ? "noreferrer" : undefined}
+        target={isExternalRecipeHref ? "_blank" : undefined}
       >
         <div className="relative h-64 overflow-hidden">
           {hasImage ? (

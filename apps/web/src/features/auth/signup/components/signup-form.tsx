@@ -1,20 +1,35 @@
 "use client";
 
-import { useActionState } from "react";
+import { FormEvent, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
-import { registerWithPassword } from "../../actions";
+import { registerWithPasswordClient } from "../../client-auth";
 import { AuthSubmitButton } from "../../components/auth-submit-button";
 import { initialAuthFormState } from "../../types";
 
 export function SignupForm() {
-  const [state, formAction] = useActionState(
-    registerWithPassword,
-    initialAuthFormState,
-  );
+  const router = useRouter();
+  const [state, setState] = useState(initialAuthFormState);
+  const [isPending, startTransition] = useTransition();
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+
+    startTransition(() => {
+      void registerWithPasswordClient(formData).then((result) => {
+        setState(result);
+
+        if (result.status === "success") {
+          router.push("/home");
+        }
+      });
+    });
+  }
 
   return (
     <div className="glass-panel hearth-shadow rounded-[2rem] p-7 sm:p-10">
-      <form action={formAction} className="flex flex-col gap-6">
+      <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-2">
           <label
             className="font-display text-[1.15rem] font-semibold tracking-[-0.02em] text-hearth-text"
@@ -116,7 +131,11 @@ export function SignupForm() {
           </p>
         ) : null}
 
-        <AuthSubmitButton label="Create Account" pendingLabel="Creating Account" />
+        <AuthSubmitButton
+          label="Create Account"
+          pending={isPending}
+          pendingLabel="Creating Account"
+        />
       </form>
     </div>
   );

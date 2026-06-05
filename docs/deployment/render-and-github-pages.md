@@ -9,6 +9,7 @@ Cookiful is prepared for a split deployment:
 
 - `.github/workflows/deploy-web-pages.yml` builds `apps/web` with `output: "export"` and deploys `apps/web/out` to GitHub Pages.
 - The Pages workflow writes `apps/web/out/.nojekyll` and uploads hidden files so Next's `_next` assets are served as static files.
+- The Pages workflow disables Next API route handlers before building because the static site calls the Render API directly.
 - `render.yaml` defines the Render API web service, Postgres database, and Key Value instance.
 - `apps/api/Dockerfile` now starts Uvicorn without dev reload and respects Render's `PORT`.
 - The API accepts `CORS_ORIGINS` so the GitHub Pages origin can call the Render API.
@@ -66,16 +67,15 @@ Use a higher limit, or omit `--limit`, when you are ready to import the full arc
 - Any future custom frontend domain must be added to `CORS_ORIGINS`.
 - Any future custom API domain should replace the `onrender.com` value in `NEXT_PUBLIC_API_URL`.
 
-## Current GitHub Pages Blockers
+## Static Export Behavior
 
-The deployment files are in place, but the current web app is not fully static-export compatible yet. Next.js static export cannot run features that require the Node.js server runtime. The current blockers are:
+The GitHub Pages build is static-export compatible, with a few deliberate deployment-time differences:
 
-- Server actions in `apps/web/src/features/auth/actions.ts`, `apps/web/src/features/groceries/actions.ts`, and `apps/web/src/features/social/actions.ts`.
-- Cookie and redirect access in server data loaders for profile and groceries pages.
-- Next route handlers under `apps/web/src/app/api/recipes/**` that read `Request` values.
-- The dynamic recipe route `apps/web/src/app/recipes/[recipeId]/page.tsx` needs static params or a client-side route strategy.
+- The workflow renames `apps/web/src/app/api/**/route.ts` files before `next build`; those proxy routes are only for server-backed local/container deployments.
+- Login, signup, profile, grocery, and social actions use browser-to-Render API calls with tokens stored in browser storage.
+- `/recipes/[recipeId]` includes a placeholder static param so the export succeeds. Real recipe detail pages are not generated on GitHub Pages yet; recipe cards avoid linking to generated 404s during static export.
 
-To make the Pages workflow pass end to end, refactor those features to call the Render API from client components, store frontend auth state without Next server cookies, and make recipe detail pages static-compatible or client-rendered.
+To add full recipe details to GitHub Pages later, generate static params from a deployed recipe catalog at build time or replace the dynamic detail route with a client-side query route.
 
 ## References
 

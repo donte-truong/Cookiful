@@ -1,11 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { BrandMark } from "../../components/brand/brand-mark";
 import { HomeHeader } from "../home/components/home-header";
 import { BookmarkIcon, HeartIcon, RepostIcon } from "../home/components/home-icons";
 import { HomeRecipeCard } from "../home/components/home-recipe-card";
 import type { HomeRecipe } from "../home/home-data";
-import type { ProfileData } from "./profile-data";
+import { fetchStoredProfileData, type ProfileData } from "./profile-data";
 
 type ProfilePageProps = {
   profile: ProfileData;
@@ -132,7 +135,39 @@ function ProfileRecipeSection({
 }
 
 export function ProfilePage({ profile }: ProfilePageProps) {
-  const displayName = profile.user.displayName || profile.user.username;
+  const [activeProfile, setActiveProfile] = useState(profile);
+  const [loadState, setLoadState] = useState<
+    "loading" | "loaded" | "unauthenticated" | "error"
+  >("loading");
+  const displayName = activeProfile.user.displayName || activeProfile.user.username;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    void fetchStoredProfileData()
+      .then((loadedProfile) => {
+        if (!isMounted) {
+          return;
+        }
+
+        if (loadedProfile === null) {
+          setLoadState("unauthenticated");
+          return;
+        }
+
+        setActiveProfile(loadedProfile);
+        setLoadState("loaded");
+      })
+      .catch(() => {
+        if (isMounted) {
+          setLoadState("error");
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-hearth-surface text-hearth-text">
@@ -149,7 +184,7 @@ export function ProfilePage({ profile }: ProfilePageProps) {
               {displayName}
             </h1>
             <p className="mt-5 max-w-[44rem] text-lg leading-8 text-hearth-muted">
-              @{profile.user.username} keeps a table of recipes worth revisiting,
+              @{activeProfile.user.username} keeps a table of recipes worth revisiting,
               saving, and sharing with the Cookiful hearth.
             </p>
           </div>
@@ -163,16 +198,33 @@ export function ProfilePage({ profile }: ProfilePageProps) {
                 <p className="font-display text-[1.35rem] tracking-[-0.03em] text-hearth-text">
                   {displayName}
                 </p>
-                <p className="mt-1 text-sm text-hearth-muted">{profile.user.email}</p>
+                <p className="mt-1 text-sm text-hearth-muted">
+                  {activeProfile.user.email || "Sign in to sync your profile"}
+                </p>
               </div>
             </div>
           </div>
         </section>
 
+        {loadState === "unauthenticated" ? (
+          <div className="rounded-[1.5rem] bg-hearth-paper px-5 py-4 text-sm font-semibold text-hearth-muted shadow-hearth">
+            <Link className="text-hearth-copper hover:underline" href="/login">
+              Sign in
+            </Link>{" "}
+            to view your liked, saved, and reposted recipes.
+          </div>
+        ) : null}
+
+        {loadState === "error" ? (
+          <div className="rounded-[1.5rem] bg-hearth-blush/55 px-5 py-4 text-sm font-semibold text-hearth-text shadow-hearth">
+            Cookiful could not load your profile right now.
+          </div>
+        ) : null}
+
         <section className="grid gap-4 py-8 md:grid-cols-3">
-          <ProfileStat Icon={HeartIcon} label="Liked" value={profile.likedRecipes.length} />
-          <ProfileStat Icon={BookmarkIcon} label="Saved" value={profile.savedRecipes.length} />
-          <ProfileStat Icon={RepostIcon} label="Reposted" value={profile.repostedRecipes.length} />
+          <ProfileStat Icon={HeartIcon} label="Liked" value={activeProfile.likedRecipes.length} />
+          <ProfileStat Icon={BookmarkIcon} label="Saved" value={activeProfile.savedRecipes.length} />
+          <ProfileStat Icon={RepostIcon} label="Reposted" value={activeProfile.repostedRecipes.length} />
         </section>
 
         {profileSections.map((section) => (
@@ -182,7 +234,7 @@ export function ProfilePage({ profile }: ProfilePageProps) {
             emptyTitle={section.emptyTitle}
             key={section.key}
             label={section.label}
-            recipes={profile[section.key as keyof Pick<ProfileData, "likedRecipes" | "savedRecipes" | "repostedRecipes">]}
+            recipes={activeProfile[section.key as keyof Pick<ProfileData, "likedRecipes" | "savedRecipes" | "repostedRecipes">]}
             title={section.title}
           />
         ))}

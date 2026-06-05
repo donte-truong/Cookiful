@@ -1,4 +1,5 @@
 import type { HomeRecipe } from "./home-data";
+import { buildBrowserApiUrl } from "../api/client";
 import { formatRecipeDurationLabel } from "../recipes/recipe-formatters";
 
 export { formatRecipeDurationLabel };
@@ -6,8 +7,6 @@ export { formatRecipeDurationLabel };
 export const HOME_CURATED_RECIPE_LIMIT = 4;
 export const HOME_HERO_QUICK_ACTION_RECIPE_LIMIT = 3;
 export const HOME_RECIPE_SEARCH_LIMIT = 5;
-
-const API_ROUTE_BASE_PATH = "/api";
 
 export type CuratedRecipeApiRecord = {
   id: string;
@@ -45,13 +44,7 @@ export function buildClientApiUrl(
   path: string,
   apiBaseUrl = process.env.NEXT_PUBLIC_API_URL,
 ): string {
-  const normalizedApiBaseUrl = apiBaseUrl?.trim().replace(/\/$/, "");
-
-  if (!normalizedApiBaseUrl) {
-    return `${API_ROUTE_BASE_PATH}${path}`;
-  }
-
-  return `${normalizedApiBaseUrl}${path}`;
+  return buildBrowserApiUrl(path, apiBaseUrl);
 }
 
 export function buildCuratedRecipesUrl({

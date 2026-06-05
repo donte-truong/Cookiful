@@ -1,11 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { FormEvent, useEffect, useState, useTransition } from "react";
 
 import { BrandMark } from "../../components/brand/brand-mark";
 import { HomeHeader } from "../home/components/home-header";
 import { BookmarkIcon, PantryIcon, ShoppingBagIcon } from "../home/components/home-icons";
 import { addPantryIngredient, removePantryIngredient } from "./actions";
 import type { GroceriesData, PantryItem, RequiredIngredientGroup } from "./groceries-data";
-import { groupRequiredIngredientsByRecipe } from "./groceries-data";
+import { fetchStoredGroceriesData, groupRequiredIngredientsByRecipe } from "./groceries-data";
 
 type GroceriesPageProps = {
   groceries: GroceriesData;
@@ -37,9 +40,32 @@ function GroceryStat({
   );
 }
 
-function PantryAddForm() {
+type PantryMutationHandler = (ingredientName: string) => void;
+type PantryRemoveHandler = (pantryItemId: string) => void;
+
+function PantryAddForm({
+  onAddIngredient,
+  pending,
+}: {
+  onAddIngredient: PantryMutationHandler;
+  pending: boolean;
+}) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const ingredientName = formData.get("ingredientName");
+
+    if (typeof ingredientName === "string" && ingredientName.trim()) {
+      onAddIngredient(ingredientName.trim());
+      event.currentTarget.reset();
+    }
+  }
+
   return (
-    <form action={addPantryIngredient} className="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+    <form
+      className="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"
+      onSubmit={handleSubmit}
+    >
       <input
         className="h-12 min-w-0 rounded-full border border-hearth-ghost/60 bg-hearth-surface px-5 text-sm font-semibold text-hearth-text outline-none transition placeholder:text-hearth-outline focus:border-hearth-copper"
         maxLength={160}
@@ -49,6 +75,7 @@ function PantryAddForm() {
       />
       <button
         className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-hearth-text px-5 text-sm font-bold text-white transition hover:bg-hearth-copper"
+        disabled={pending}
         type="submit"
       >
         <PantryIcon className="h-4 w-4" />
@@ -58,7 +85,17 @@ function PantryAddForm() {
   );
 }
 
-function PantryShelf({ items }: { items: PantryItem[] }) {
+function PantryShelf({
+  items,
+  onAddIngredient,
+  onRemoveIngredient,
+  pending,
+}: {
+  items: PantryItem[];
+  onAddIngredient: PantryMutationHandler;
+  onRemoveIngredient: PantryRemoveHandler;
+  pending: boolean;
+}) {
   return (
     <aside className="lg:sticky lg:top-28 lg:self-start">
       <div className="rounded-[1.8rem] bg-hearth-paper p-5 shadow-hearth sm:p-6">
@@ -76,7 +113,7 @@ function PantryShelf({ items }: { items: PantryItem[] }) {
           </span>
         </div>
 
-        <PantryAddForm />
+        <PantryAddForm onAddIngredient={onAddIngredient} pending={pending} />
 
         {items.length > 0 ? (
           <div className="mt-6 flex flex-col gap-3">
@@ -88,11 +125,18 @@ function PantryShelf({ items }: { items: PantryItem[] }) {
                 <span className="min-w-0 text-sm font-semibold leading-6 text-hearth-text">
                   {item.ingredientName}
                 </span>
-                <form action={removePantryIngredient} className="shrink-0">
+                <form
+                  className="shrink-0"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    onRemoveIngredient(item.id);
+                  }}
+                >
                   <input name="pantryItemId" type="hidden" value={item.id} />
                   <button
                     aria-label={`Remove ${item.ingredientName}`}
                     className="rounded-full px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-hearth-outline transition hover:bg-hearth-low hover:text-hearth-copper"
+                    disabled={pending}
                     type="submit"
                   >
                     Remove
@@ -113,7 +157,15 @@ function PantryShelf({ items }: { items: PantryItem[] }) {
   );
 }
 
-function IngredientRow({ ingredient }: { ingredient: RequiredIngredientGroup["ingredients"][number] }) {
+function IngredientRow({
+  ingredient,
+  onAddIngredient,
+  pending,
+}: {
+  ingredient: RequiredIngredientGroup["ingredients"][number];
+  onAddIngredient: PantryMutationHandler;
+  pending: boolean;
+}) {
   return (
     <li className="grid gap-3 rounded-[1rem] bg-hearth-surface px-4 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
       <div className="flex min-w-0 items-start gap-3">
@@ -153,10 +205,17 @@ function IngredientRow({ ingredient }: { ingredient: RequiredIngredientGroup["in
           In pantry
         </span>
       ) : (
-        <form action={addPantryIngredient} className="sm:justify-self-end">
+        <form
+          className="sm:justify-self-end"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onAddIngredient(ingredient.text);
+          }}
+        >
           <input name="ingredientName" type="hidden" value={ingredient.text} />
           <button
             className="inline-flex h-9 items-center justify-center rounded-full border border-hearth-ghost bg-hearth-paper px-4 text-xs font-bold uppercase tracking-[0.16em] text-hearth-copper transition hover:border-hearth-copper hover:bg-hearth-low"
+            disabled={pending}
             type="submit"
           >
             Have it
@@ -167,7 +226,15 @@ function IngredientRow({ ingredient }: { ingredient: RequiredIngredientGroup["in
   );
 }
 
-function RecipeIngredientCard({ group }: { group: RequiredIngredientGroup }) {
+function RecipeIngredientCard({
+  group,
+  onAddIngredient,
+  pending,
+}: {
+  group: RequiredIngredientGroup;
+  onAddIngredient: PantryMutationHandler;
+  pending: boolean;
+}) {
   const progress = group.totalCount > 0 ? Math.round((group.inPantryCount / group.totalCount) * 100) : 0;
 
   return (
@@ -192,7 +259,12 @@ function RecipeIngredientCard({ group }: { group: RequiredIngredientGroup }) {
 
       <ul className="mt-5 grid gap-3">
         {group.ingredients.map((ingredient) => (
-          <IngredientRow ingredient={ingredient} key={ingredient.id} />
+          <IngredientRow
+            ingredient={ingredient}
+            key={ingredient.id}
+            onAddIngredient={onAddIngredient}
+            pending={pending}
+          />
         ))}
       </ul>
     </article>
@@ -222,9 +294,87 @@ function EmptyGroceriesState() {
 }
 
 export function GroceriesPage({ groceries }: GroceriesPageProps) {
-  const groups = groupRequiredIngredientsByRecipe(groceries.requiredIngredients);
-  const pantryCoveredCount = groceries.requiredIngredients.filter((ingredient) => ingredient.inPantry).length;
-  const missingCount = groceries.requiredIngredients.length - pantryCoveredCount;
+  const [activeGroceries, setActiveGroceries] = useState(groceries);
+  const [message, setMessage] = useState("");
+  const [loadState, setLoadState] = useState<
+    "loading" | "loaded" | "unauthenticated" | "error"
+  >("loading");
+  const [isPending, startTransition] = useTransition();
+  const groups = groupRequiredIngredientsByRecipe(activeGroceries.requiredIngredients);
+  const pantryCoveredCount = activeGroceries.requiredIngredients.filter((ingredient) => ingredient.inPantry).length;
+  const missingCount = activeGroceries.requiredIngredients.length - pantryCoveredCount;
+
+  async function refreshGroceries() {
+    const loadedGroceries = await fetchStoredGroceriesData();
+
+    if (loadedGroceries === null) {
+      setLoadState("unauthenticated");
+      return;
+    }
+
+    setActiveGroceries(loadedGroceries);
+    setLoadState("loaded");
+  }
+
+  useEffect(() => {
+    let isMounted = true;
+
+    void fetchStoredGroceriesData()
+      .then((loadedGroceries) => {
+        if (!isMounted) {
+          return;
+        }
+
+        if (loadedGroceries === null) {
+          setLoadState("unauthenticated");
+          return;
+        }
+
+        setActiveGroceries(loadedGroceries);
+        setLoadState("loaded");
+      })
+      .catch(() => {
+        if (isMounted) {
+          setLoadState("error");
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  function handleAddIngredient(ingredientName: string) {
+    setMessage("");
+
+    startTransition(() => {
+      void addPantryIngredient(ingredientName).then(async (result) => {
+        if (result.status === "success") {
+          await refreshGroceries();
+          return;
+        }
+
+        setMessage(result.message);
+        setLoadState(result.status);
+      });
+    });
+  }
+
+  function handleRemoveIngredient(pantryItemId: string) {
+    setMessage("");
+
+    startTransition(() => {
+      void removePantryIngredient(pantryItemId).then(async (result) => {
+        if (result.status === "success") {
+          await refreshGroceries();
+          return;
+        }
+
+        setMessage(result.message);
+        setLoadState(result.status);
+      });
+    });
+  }
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-hearth-surface text-hearth-text">
@@ -256,8 +406,8 @@ export function GroceriesPage({ groceries }: GroceriesPageProps) {
                   Profile pantry
                 </p>
                 <p className="mt-1 text-sm leading-6 text-hearth-muted">
-                  {groceries.pantryItems.length} saved pantry{" "}
-                  {groceries.pantryItems.length === 1 ? "item" : "items"}
+                  {activeGroceries.pantryItems.length} saved pantry{" "}
+                  {activeGroceries.pantryItems.length === 1 ? "item" : "items"}
                 </p>
               </div>
             </div>
@@ -265,10 +415,25 @@ export function GroceriesPage({ groceries }: GroceriesPageProps) {
         </section>
 
         <section className="grid gap-4 py-8 md:grid-cols-3">
-          <GroceryStat Icon={BookmarkIcon} label="Saved" value={groceries.savedRecipeCount} />
+          <GroceryStat Icon={BookmarkIcon} label="Saved" value={activeGroceries.savedRecipeCount} />
           <GroceryStat Icon={ShoppingBagIcon} label="Needed" value={missingCount} />
           <GroceryStat Icon={PantryIcon} label="In Pantry" value={pantryCoveredCount} />
         </section>
+
+        {loadState === "unauthenticated" ? (
+          <div className="rounded-[1.5rem] bg-hearth-paper px-5 py-4 text-sm font-semibold text-hearth-muted shadow-hearth">
+            <Link className="text-hearth-copper hover:underline" href="/login">
+              Sign in
+            </Link>{" "}
+            to sync saved recipe ingredients and pantry items.
+          </div>
+        ) : null}
+
+        {loadState === "error" || message ? (
+          <div className="rounded-[1.5rem] bg-hearth-blush/55 px-5 py-4 text-sm font-semibold text-hearth-text shadow-hearth">
+            {message || "Cookiful could not load your groceries right now."}
+          </div>
+        ) : null}
 
         <section className="grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_24rem]">
           <div>
@@ -282,15 +447,20 @@ export function GroceriesPage({ groceries }: GroceriesPageProps) {
                 </h2>
               </div>
               <p className="text-sm font-semibold text-hearth-copper">
-                {groceries.requiredIngredients.length}{" "}
-                {groceries.requiredIngredients.length === 1 ? "ingredient" : "ingredients"}
+                {activeGroceries.requiredIngredients.length}{" "}
+                {activeGroceries.requiredIngredients.length === 1 ? "ingredient" : "ingredients"}
               </p>
             </div>
 
             {groups.length > 0 ? (
               <div className="grid gap-5">
                 {groups.map((group) => (
-                  <RecipeIngredientCard group={group} key={group.recipeId} />
+                  <RecipeIngredientCard
+                    group={group}
+                    key={group.recipeId}
+                    onAddIngredient={handleAddIngredient}
+                    pending={isPending}
+                  />
                 ))}
               </div>
             ) : (
@@ -298,7 +468,12 @@ export function GroceriesPage({ groceries }: GroceriesPageProps) {
             )}
           </div>
 
-          <PantryShelf items={groceries.pantryItems} />
+          <PantryShelf
+            items={activeGroceries.pantryItems}
+            onAddIngredient={handleAddIngredient}
+            onRemoveIngredient={handleRemoveIngredient}
+            pending={isPending}
+          />
         </section>
       </div>
     </main>

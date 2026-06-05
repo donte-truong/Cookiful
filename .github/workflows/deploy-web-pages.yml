@@ -1,5 +1,9 @@
 name: Deploy web to GitHub Pages
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  NEXT_TELEMETRY_DISABLED: "1"
+
 on:
   push:
     branches:
@@ -26,7 +30,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout
+        uses: actions/checkout@v6
 
       - name: Set up Bun
         uses: oven-sh/setup-bun
@@ -34,7 +38,7 @@ jobs:
           bun-version: 1.1.38
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages
+        uses: actions/configure-pages@v6
 
       - name: Derive Pages base path
         shell: bash
@@ -60,10 +64,16 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Disable Next API route handlers for static export
+        shell: bash
+        run: |
+          find apps/web/src/app/api -name route.ts -print -exec sh -c 'mv "$1" "$1.static-export-disabled"' sh {} \;
+
       - name: Build static web export
         env:
           GITHUB_PAGES: "true"
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_STATIC_EXPORT: "true"
         run: bun --filter @cookiful/web build
 
       - name: Disable Jekyll processing
