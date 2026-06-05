@@ -3,16 +3,13 @@ type BrandLogoProps = {
   className?: string;
 };
 
-export function BrandLogo({
-  alt = "",
-  className = ""
-}: BrandLogoProps) {
+export function BrandLogo({ alt = "", className = "" }: BrandLogoProps) {
   return (
     <img
       alt={alt}
       className={className}
       height={136}
-      src="/brand/logo.svg"
+      src={`${process.env.NEXT_PUBLIC_BASE_PATH}/brand/logo.svg`}
       width={450}
     />
   );
