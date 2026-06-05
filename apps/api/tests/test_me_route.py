@@ -17,7 +17,7 @@ from apps.api.src.api.routes.me import (
     router,
     update_recipe_social_action,
 )
-from cookiful_db.models import Recipe, RecipeStatus, RecipeVersion, RecipeVisibility, User, UserProfile, UserRecipeSocialAction, UserStatus
+from cookiful_db.models import Recipe, RecipeIngredient, RecipeStatus, RecipeVersion, RecipeVisibility, User, UserProfile, UserRecipeSocialAction, UserStatus
 
 
 class FakeSettings:
@@ -120,6 +120,16 @@ def make_version(recipe: Recipe) -> RecipeVersion:
         raw_ingredients=["toast", "tomato"],
         raw_directions=["Toast bread.", "Add tomato."],
         raw_ner=["toast", "tomato"],
+    )
+
+
+def make_ingredient(version: RecipeVersion, text: str = "2 slices sourdough") -> RecipeIngredient:
+    return RecipeIngredient(
+        id=uuid4(),
+        recipe_version_id=version.id,
+        ingredient_text=text,
+        ner_name=None,
+        sort_order=1,
     )
 
 
@@ -248,13 +258,18 @@ class MeProfileTests(unittest.TestCase):
             (UserRecipeSocialAction(user_id=user.id, recipe_id=saved_recipe.id, action_type="save"), saved_recipe, make_version(saved_recipe)),
             (UserRecipeSocialAction(user_id=user.id, recipe_id=reposted_recipe.id, action_type="repost"), reposted_recipe, make_version(reposted_recipe)),
         ]
+        saved_version = make_version(saved_recipe)
+        grocery_rows = [(saved_recipe, make_ingredient(saved_version, "2 cups cooked white beans"))]
 
-        response = build_profile_response(user, rows)
+        response = build_profile_response(user, rows, grocery_rows)
 
         self.assertEqual(response.user.display_name, "Chef Example")
         self.assertEqual([recipe.title for recipe in response.liked_recipes], ["Tomato Toast"])
         self.assertEqual([recipe.title for recipe in response.saved_recipes], ["Braised Beans"])
         self.assertEqual([recipe.title for recipe in response.reposted_recipes], ["Citrus Salad"])
+        self.assertEqual(len(response.grocery_items), 1)
+        self.assertEqual(response.grocery_items[0].text, "2 cups cooked white beans")
+        self.assertEqual(response.grocery_items[0].recipe_title, "Braised Beans")
 
     def test_get_me_profile_loads_user_and_social_recipes(self) -> None:
         user = make_user()
@@ -266,6 +281,7 @@ class MeProfileTests(unittest.TestCase):
             [
                 FakeResult(scalar_value=user),
                 FakeResult(all_values=rows),
+                FakeResult(all_values=[]),
             ]
         )
 
@@ -275,6 +291,7 @@ class MeProfileTests(unittest.TestCase):
         self.assertEqual(response.user.email, "chef@example.test")
         self.assertEqual(len(response.liked_recipes), 1)
         self.assertEqual(response.liked_recipes[0].title, "Tomato Toast")
+        self.assertEqual(response.grocery_items, [])
 
 
 if __name__ == "__main__":

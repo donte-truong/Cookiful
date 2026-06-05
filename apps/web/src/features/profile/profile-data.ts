@@ -19,6 +19,14 @@ type ProfileApiResponse = {
   liked_recipes: CuratedRecipeApiRecord[];
   saved_recipes: CuratedRecipeApiRecord[];
   reposted_recipes: CuratedRecipeApiRecord[];
+  grocery_items?: ProfileGroceryItemApiRecord[];
+};
+
+type ProfileGroceryItemApiRecord = {
+  id: string;
+  text: string;
+  recipe_id: string;
+  recipe_title: string;
 };
 
 export type ProfileUser = {
@@ -33,6 +41,14 @@ export type ProfileData = {
   likedRecipes: HomeRecipe[];
   savedRecipes: HomeRecipe[];
   repostedRecipes: HomeRecipe[];
+  groceryItems: ProfileGroceryItem[];
+};
+
+export type ProfileGroceryItem = {
+  id: string;
+  text: string;
+  recipeId: string;
+  recipeTitle: string;
 };
 
 export function toProfileData(payload: ProfileApiResponse): ProfileData {
@@ -46,6 +62,12 @@ export function toProfileData(payload: ProfileApiResponse): ProfileData {
     likedRecipes: payload.liked_recipes.map(toHomeRecipe),
     savedRecipes: payload.saved_recipes.map(toHomeRecipe),
     repostedRecipes: payload.reposted_recipes.map(toHomeRecipe),
+    groceryItems: (payload.grocery_items ?? []).map((item) => ({
+      id: item.id,
+      text: item.text,
+      recipeId: item.recipe_id,
+      recipeTitle: item.recipe_title,
+    })),
   };
 }
 

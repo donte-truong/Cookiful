@@ -11,7 +11,15 @@ from sqlalchemy.orm import selectinload
 from apps.api.src.api.routes.auth import decode_access_token
 from apps.api.src.api.routes.recipes import CuratedRecipeResponse, serialize_curated_recipe
 from cookiful_db import SessionLocal
-from cookiful_db.models import Recipe, RecipeStatus, RecipeVersion, RecipeVisibility, User, UserRecipeSocialAction
+from cookiful_db.models import (
+    Recipe,
+    RecipeIngredient,
+    RecipeStatus,
+    RecipeVersion,
+    RecipeVisibility,
+    User,
+    UserRecipeSocialAction,
+)
 
 
 router = APIRouter()
@@ -40,11 +48,20 @@ class MeUserResponse(BaseModel):
     display_name: str | None
 
 
+class MeProfileGroceryItem(BaseModel):
+    id: str
+    text: str
+    recipe_id: UUID
+    recipe_title: str
+
+
 class MeProfileResponse(BaseModel):
     user: MeUserResponse
     liked_recipes: list[CuratedRecipeResponse]
     saved_recipes: list[CuratedRecipeResponse]
     reposted_recipes: list[CuratedRecipeResponse]
+    grocery_items: list[MeProfileGroceryItem]
+
 
 
 def unauthorized_error() -> HTTPException:
@@ -128,6 +145,24 @@ def build_profile_social_recipes_query(user_id: UUID) -> Select[tuple[UserRecipe
     )
 
 
+def build_profile_grocery_items_query(user_id: UUID) -> Select[tuple[Recipe, RecipeIngredient]]:
+    return (
+        select(Recipe, RecipeIngredient)
+        .join(UserRecipeSocialAction, UserRecipeSocialAction.recipe_id == Recipe.id)
+        .join(RecipeVersion, RecipeVersion.id == Recipe.current_version_id)
+        .join(RecipeIngredient, RecipeIngredient.recipe_version_id == RecipeVersion.id)
+        .where(
+            UserRecipeSocialAction.user_id == user_id,
+            UserRecipeSocialAction.action_type == "save",
+            Recipe.status == RecipeStatus.PUBLISHED,
+            Recipe.visibility == RecipeVisibility.PUBLIC,
+            Recipe.current_version_id.is_not(None),
+        )
+        .order_by(Recipe.title.asc(), RecipeIngredient.sort_order.asc())
+    )
+
+
+
 def build_action_state(recipe_id: UUID, action_types: list[str]) -> RecipeSocialActionState:
     action_type_set = set(action_types)
     return RecipeSocialActionState(
@@ -151,6 +186,7 @@ def serialize_me_user(user: User) -> MeUserResponse:
 def build_profile_response(
     user: User,
     rows: list[tuple[UserRecipeSocialAction, Recipe, RecipeVersion | None]],
+    grocery_rows: list[tuple[Recipe, RecipeIngredient]],
 ) -> MeProfileResponse:
     recipe_groups: dict[str, list[CuratedRecipeResponse]] = {
         "like": [],
@@ -178,7 +214,17 @@ def build_profile_response(
         liked_recipes=recipe_groups["like"],
         saved_recipes=recipe_groups["save"],
         reposted_recipes=recipe_groups["repost"],
+        grocery_items=[
+            MeProfileGroceryItem(
+                id=f"{recipe.id}:{ingredient.id}",
+                text=ingredient.ingredient_text,
+                recipe_id=recipe.id,
+                recipe_title=recipe.title,
+            )
+            for recipe, ingredient in grocery_rows
+        ],
     )
+
 
 
 @router.put("/recipe-actions", response_model=RecipeSocialActionState)
@@ -220,5 +266,6 @@ def get_me_profile(user_id: Annotated[UUID, Depends(get_current_user_id)]) -> Me
             raise unauthorized_error()
 
         rows = session.execute(build_profile_social_recipes_query(user_id)).all()
+        grocery_rows = session.execute(build_profile_grocery_items_query(user_id)).all()
 
-    return build_profile_response(user, list(rows))
+    return build_profile_response(user, list(rows), list(grocery_rows))
