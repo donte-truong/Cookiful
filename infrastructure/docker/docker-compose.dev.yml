@@ -1,3 +1,5 @@
+name: cookiful
+
 services:
   postgres:
     image: postgres:16
@@ -30,6 +32,45 @@ services:
       timeout: 5s
       retries: 10
 
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    container_name: cookiful-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/cookiful
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: cookiful-local-access-secret
+      JWT_REFRESH_SECRET: cookiful-local-refresh-secret
+    ports:
+      - "4000:4000"
+    volumes:
+      - ../..:/workspace
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    container_name: cookiful-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:4000/api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../..:/workspace
+      - web_node_modules:/workspace/node_modules
+      - web_next:/workspace/apps/web/.next
+
   pgadmin:
     image: dpage/pgadmin4:8
     container_name: cookiful-pgadmin
@@ -51,3 +92,5 @@ services:
 volumes:
   postgres_data:
   pgadmin_data:
+  web_node_modules:
+  web_next:

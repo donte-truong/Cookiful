@@ -1,0 +1,32 @@
+.git
+.agents
+.codex
+.env
+.env.*
+!.env.example
+
+node_modules
+**/node_modules
+.next
+**/.next
+.turbo
+**/.turbo
+dist
+build
+coverage
+
+# Large local recipe fixtures are bind-mounted in dev and do not need to travel
+# in the image build context.
+packages/recipe-schema/data
+packages/utils/recipe-box/data
+
+.venv
+__pycache__
+**/__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+infrastructure/docker/.env
